@@ -15,7 +15,7 @@
 
 | Student Name | School Email | GitHub Username |
 |    :---:     |     :---:     |     :---:       |
-| member1      |               |                 |
+| Kiran Khatri  | kkhatri@sfsu.edu              |  khatri5034               |
 | member2      |               |                 |
 | member3      |               |                 |
 | member4      |               |                 |
