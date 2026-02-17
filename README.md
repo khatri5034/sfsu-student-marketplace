@@ -17,7 +17,7 @@
 |    :---:     |     :---:     |     :---:       |
 | Kiran Khatri  | kkhatri@sfsu.edu              |  khatri5034               |
 | Gursimran Grewal      |ggrewal3@sfsu.edu               | ggrewal3                |
-| member3      |               |                 |
+| Jordan Westover      |  jwestover@sfsu.edu             |   jwestover-123              |
 | member4      |               |                 |
 | member5      |               |                 |
 | member6      |               |                 |
