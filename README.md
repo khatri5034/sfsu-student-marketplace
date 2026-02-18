@@ -18,9 +18,9 @@
 | Kiran Khatri  | kkhatri@sfsu.edu              |  khatri5034               |
 | Gursimran Grewal      |ggrewal3@sfsu.edu               | ggrewal3                |
 | Jordan Westover      |  jwestover@sfsu.edu             |   jwestover-123              |
-| Christopher Huynh   |chuynh3@sfsu.edu   |                 |Shupadup     | 
+| Christopher Huynh   |chuynh3@sfsu.edu   |               Shupadup     | 
 | Stiofan Condon      |scondon2@mail.sfsu.edu               |TownsendBrown                 |
 | Leslie Garcia      |lgarcia26@sfsu.edu               |leslieg4                 |
-| member6      |               |                 |
+| member7      |               |                 |
 
 ## NO code needs to be stored in the root of your repository. You may rename the application folder if you like to your team's application name. But all source code related to your team's application should be stored inside the application folder.
