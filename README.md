@@ -18,10 +18,7 @@
 | Kiran Khatri  | kkhatri@sfsu.edu              |  khatri5034               |
 | Gursimran Grewal      |ggrewal3@sfsu.edu               | ggrewal3                |
 | Jordan Westover      |  jwestover@sfsu.edu             |   jwestover-123              |
-| member4      |               |                 |
-| member5      |               |                 |
-
-| Christopher Huynh      |chuynh3@sfsu.edu               |Shupadup                 |
+| Christopher Huynh   |chuynh3@sfsu.edu   |                 |Shupadup     | 
 | Stiofan Condon      |scondon2@mail.sfsu.edu               |TownsendBrown                 |
 | Leslie Garcia      |lgarcia26@sfsu.edu               |leslieg4                 |
 | member6      |               |                 |
