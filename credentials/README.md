@@ -7,16 +7,30 @@
 
 # Below is a list of items required. Missing items will causes points to be deducted from multiple milestone submissions.
 
-1. Server URL or IP
-2. SSH username
-3. SSH password or key.
+# Team 14 Server Credentials
+
+## Server Information
+1. Server IP: 18.221.212.187
+2. SSH username: ubuntu
+3. SSH key: mykeypair.pem (located in this folder)
     <br> If a ssh key is used please upload the key to the credentials folder.
-4. Database URL or IP and port used.
+
+## Database Information
+4. Database IP: 18.221.212.187
     <br><strong> NOTE THIS DOES NOT MEAN YOUR DATABASE NEEDS A PUBLIC FACING PORT.</strong> But knowing the IP and port number will help with SSH tunneling into the database. The default port is more than sufficient for this class.
-5. Database username
-6. Database password
-7. Database name (basically the name that contains all your tables)
-8. Instructions on how to use the above information.
+5. Database username: team14
+6. Database password: team14@database
+7. Database name: team14
+
+## Instructions on how to use the above information.
+
+## To SSH into the server:
+ssh -i mykeypair.pem ubuntu@18.221.212.187
+
+## To access the database:
+1. SSH into the server using instructions above
+2. Then run: mysql -u team14 -p
+3. Enter the database password, stated above, when prompted
 
 # Most important things to Remember
 ## These values need to kept update to date throughout the semester. <br>
