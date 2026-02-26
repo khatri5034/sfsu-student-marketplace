@@ -4,3 +4,4 @@ node_modules/
 certbot/
 src/public/css/style.css
 src/public/css/style.css.map
+.DS_Store
