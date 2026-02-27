@@ -16,9 +16,12 @@ body {
   color: var(--text);
 }
 
+
+/*
 body.kiran-page {
   background: #e0f4ff; 
 }
+*/
 
 .page {
   min-height: 100%;
@@ -163,6 +166,10 @@ body.kiran-page {
   .hint {
     max-width: 100%;
     padding: 18px 16px;
+  }
+
+  .teamGrid { 
+    gap: 14px;
   }
 }
 
