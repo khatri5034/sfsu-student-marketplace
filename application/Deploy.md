@@ -49,7 +49,7 @@ Edit `.env` and set:
 The app is configured for **team14.csc648sfsu.com**. Ensure:
 
 1. DNS for `team14.csc648sfsu.com` points to the server’s public IP.
-2. In `nginx/conf.d/default.conf`, `server_name` is set to `team14.csc648sfsu.com` in both the HTTP and HTTPS server blocks (already done if you use the included config).
+2. In `nginx/conf.d/default.conf`, `server_name` is set to `team14.csc648sfsu.com` in both the HTTP and HTTPS server blocks (already done in the current config).
 
 Initially the HTTPS server block uses **self-signed** certs so NGINX can start before Let’s Encrypt certs exist.
 
