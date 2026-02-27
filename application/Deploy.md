@@ -127,7 +127,7 @@ Site should now be available at **https://team14.csc648sfsu.com**.
 ## 8. Checklist
 
 - [ ] Docker + Docker Compose plugin installed
-- [ ] Project copied to server (no `node_modules`, no `.env` in repo)
+- [ ] Project copied to server
 - [ ] `.env` created from `.env.example` and filled in
 - [ ] DNS for `team14.csc648sfsu.com` points to server IP
 - [ ] Ports 80 and 443 open
