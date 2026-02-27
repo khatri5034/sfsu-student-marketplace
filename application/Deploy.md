@@ -18,12 +18,6 @@ docker --version
 docker compose version
 ```
 
-Add your user to the `docker` group (then log out and back in):
-
-```bash
-sudo usermod -aG docker $USER
-```
-
 ---
 
 ## 2. Get the project from GitHub
