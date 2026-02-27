@@ -28,15 +28,6 @@ Clone the repo (first time on the server):
 git clone https://github.com/YOUR_ORG/YOUR_REPO.git
 cd YOUR_REPO
 ```
-
-To update later:
-
-```bash
-git pull
-```
-
-Do not commit `node_modules` or `.env`; they are in `.gitignore`. After a fresh clone or pull, create `.env` in the next step.
-
 ---
 
 ## 3. Environment file
