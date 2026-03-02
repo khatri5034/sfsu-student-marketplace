@@ -10,13 +10,13 @@
 # Team 14 Server Credentials
 
 ## Server Information
-1. Server IP: 18.217.177.101
+1. Server IP: 3.143.212.106
 2. SSH username: ubuntu
 3. SSH key: mykeypair.pem (located in this folder)
     <br> If a ssh key is used please upload the key to the credentials folder.
 
 ## Database Information
-4. Database IP: 18.217.177.101
+4. Database IP: 3.143.212.106
     <br><strong> NOTE THIS DOES NOT MEAN YOUR DATABASE NEEDS A PUBLIC FACING PORT.</strong> But knowing the IP and port number will help with SSH tunneling into the database. The default port is more than sufficient for this class.
 5. Database username: team14
 6. Database password: team14@database
@@ -26,7 +26,7 @@
 
 ## To SSH into the server:
 ```bash
-ssh -i mykeypair.pem ubuntu@18.217.177.101
+ssh -i mykeypair.pem ubuntu@3.143.212.106
 ```
 
 ## To access the database:
