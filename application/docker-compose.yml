@@ -8,8 +8,8 @@ services:
       MYSQL_DATABASE: ${DB_NAME}
       MYSQL_USER: ${DB_USER}
       MYSQL_PASSWORD: ${DB_PASSWORD}
-    ports:
-      - "3306:3306"
+    # Not exposed to host - only reachable via internal network (app connects via service name)
+    command: ["--innodb-buffer-pool-size=128M"]
     volumes:
       - mysql_data:/var/lib/mysql
     healthcheck:
@@ -17,6 +17,17 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - internal
+    deploy:
+      resources:
+        limits:
+          memory: 384M
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   app:
     build:
@@ -32,11 +43,21 @@ services:
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
       DB_NAME: ${DB_NAME}
-    ports:
-      - "3000:3000"
+    # Not exposed to host - nginx proxies to app via internal network
     depends_on:
       mysql:
         condition: service_healthy
+    networks:
+      - internal
+    deploy:
+      resources:
+        limits:
+          memory: 384M
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   nginx:
     build:
@@ -52,6 +73,17 @@ services:
       - ./certbot/www:/var/www/certbot
     depends_on:
       - app
+    networks:
+      - internal
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   certbot:
     image: certbot/certbot:latest
@@ -62,6 +94,21 @@ services:
     # Run manually: first time and renewals. Not started with 'docker compose up'.
     profiles:
       - donotstart
+    networks:
+      - internal
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  internal:
+    driver: bridge
 
 volumes:
   mysql_data:
