@@ -10,7 +10,23 @@ const indexRoutes = require('./routes/index');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(helmet());
+const isDevelopment = app.get('env') === 'development';
+
+// Helmet security configuration:
+// disabled `upgrade-insecure-requests` and `strictTransportSecurity` during
+// local development because browser tries to force HTTPS on localhost.
+// Forcing HTTPS can break navigation and asset loading (CSS, images, links).
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        'upgrade-insecure-requests': isDevelopment ? null : [],
+      },
+    },
+    strictTransportSecurity: isDevelopment ? false : undefined,
+  })
+);
+
 app.use(cors());
 app.use(morgan('combined'));
 app.use(express.json());
