@@ -5,6 +5,7 @@ const cors = require('cors');
 const morgan = require('morgan');
 const path = require('path');
 const db = require('./config/db');
+const setupMeilisearchIndexes = require('./config/meilisearch-setup');
 const indexRoutes = require('./routes/index');
 
 const app = express();
@@ -40,8 +41,9 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Internal Server Error' });
 });
 
-app.listen(PORT, '0.0.0.0', () => {
+app.listen(PORT, '0.0.0.0', async () => {
   console.log(`Server running on port ${PORT}`);
+  await setupMeilisearchIndexes();
 });
 
 module.exports = app;
