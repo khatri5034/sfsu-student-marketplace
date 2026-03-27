@@ -2,7 +2,7 @@ CREATE TABLE users (
     id INT PRIMARY KEY AUTO_INCREMENT,
     first_name VARCHAR(100) NOT NULL,
     last_name VARCHAR(100) NOT NULL,
-    school_email VARCHAR(255) UNIQUE,
+    school_email VARCHAR(255) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
     profile_image_url VARCHAR(500),
 
@@ -46,7 +46,7 @@ CREATE TABLE items (
     seller_id INT NOT NULL,
     title VARCHAR(255) NOT NULL,
     description TEXT,
-    price DECIMAL(10,2) NOT NULL,
+    price DECIMAL(10,2) NULL,
     category_id INT NULL,
     listing_type ENUM('sale', 'trade', 'sale_or_trade') NOT NULL DEFAULT 'sale',
     pickup_location_id INT NULL,

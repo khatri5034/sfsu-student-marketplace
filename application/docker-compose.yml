@@ -63,6 +63,8 @@ services:
       dockerfile: docker/node.Dockerfile
     container_name: app
     restart: unless-stopped
+    volumes:
+      - ./src/public/uploads:/usr/src/app/public/uploads
     environment:
       NODE_ENV: production
       PORT: 3000
@@ -145,3 +147,4 @@ networks:
 volumes:
   mysql_data:
   meili_data:
+  uploads_data:

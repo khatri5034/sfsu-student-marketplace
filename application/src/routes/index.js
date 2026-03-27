@@ -4,6 +4,7 @@ const meili = require('../config/meilisearch');
 
 const router = express.Router();
 const db = require('../config/db');
+const itemImageUpload = require('../config/itemImageUpload');
 
 // Home page (static)
 router.get('/', (req, res) => {
@@ -49,8 +50,16 @@ router.get('/api/items/search', async (req, res) => {
       filter: 'status = active',
       limit: 50,
     });
+    const query = q.trim().toLowerCase();
+    let items = result.hits;
+    if (query) {
+      // Keep only items whose title explicitly contains the query text.
+      items = items.filter((item) =>
+        String(item.title || '').toLowerCase().includes(query)
+      );
+    }
 
-    res.json({ items: result.hits });
+    res.json({ items });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Search failed' });
@@ -64,6 +73,39 @@ router.get('/health', async (req, res) => {
     res.json({ status: 'healthy', db: 'connected' });
   } catch (err) {
     res.status(503).json({ status: 'unhealthy', db: 'disconnected' });
+  }
+});
+
+// Upload an image for a marketplace item.
+// Expects multipart/form-data with field name: `image`
+router.post('/api/items/:id/images', itemImageUpload.single('image'), itemImageUpload.array('images', 5), async (req, res) => {
+  const itemId = Number.parseInt(req.params.id, 10);
+  if (!Number.isInteger(itemId) || itemId <= 0) {
+    return res.status(400).json({ success: false, error: 'Invalid item id' });
+  }
+
+  if (!req.file) {
+    return res.status(400).json({ success: false, error: 'Image file is required' });
+  }
+
+  const imageUrl = `/uploads/${req.file.filename}`;
+
+  try {
+    await db.query(
+      `INSERT INTO listing_images (item_id, image_url)
+       VALUES (?, ?)`,
+      [itemId, imageUrl]
+    );
+
+    res.status(201).json({ success: true, imageUrl });
+  } catch (err) {
+    // Foreign key errors usually mean the item_id doesn't exist.
+    if (err && (err.code === 'ER_NO_REFERENCED_ROW_2' || err.errno === 1452)) {
+      return res.status(404).json({ success: false, error: 'Item not found' });
+    }
+
+    console.error(err);
+    res.status(500).json({ success: false, error: 'Failed to save image' });
   }
 });
 
