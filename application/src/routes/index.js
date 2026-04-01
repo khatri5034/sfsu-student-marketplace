@@ -43,23 +43,28 @@ router.get('/api/items/home', async (req, res) => {
 // Search items through Meilisearch
 router.get('/api/items/search', async (req, res) => {
   const q = (req.query.q || '').toString();
+  const categoryId = req.query.category_id;
+  const courseId = req.query.course_id;
 
   try {
     const index = meili.index('items');
-    const result = await index.search(q, {
-      filter: 'status = active',
-      limit: 50,
-    });
-    const query = q.trim().toLowerCase();
-    let items = result.hits;
-    if (query) {
-      // Keep only items whose title explicitly contains the query text.
-      items = items.filter((item) =>
-        String(item.title || '').toLowerCase().includes(query)
-      );
+
+    const filters = ['status = active'];
+
+    if (categoryId) {
+      filters.push(`category_id = ${Number(categoryId)}`);
     }
 
-    res.json({ items });
+    if (courseId) {
+      filters.push(`course_id = ${Number(courseId)}`);
+    }
+
+    const result = await index.search(q, {
+      filter: filters.join(' AND '),
+      limit: 50,
+    });
+
+    res.json({ items: result.hits });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Search failed' });
@@ -76,37 +81,42 @@ router.get('/health', async (req, res) => {
   }
 });
 
-// Upload an image for a marketplace item.
-// Expects multipart/form-data with field name: `image`
-router.post('/api/items/:id/images', itemImageUpload.single('image'), itemImageUpload.array('images', 5), async (req, res) => {
+// Upload multiple images for a marketplace item.
+router.post('/api/items/:id/images', itemImageUpload.array('images', 5), async (req, res) => {
   const itemId = Number.parseInt(req.params.id, 10);
+
   if (!Number.isInteger(itemId) || itemId <= 0) {
     return res.status(400).json({ success: false, error: 'Invalid item id' });
   }
 
-  if (!req.file) {
-    return res.status(400).json({ success: false, error: 'Image file is required' });
+  if (!req.files || req.files.length === 0) {
+    return res.status(400).json({ success: false, error: 'At least one image is required' });
   }
 
-  const imageUrl = `/uploads/${req.file.filename}`;
-
   try {
+    const imageRecords = req.files.map((file, index) => [
+      itemId,
+      `/uploads/${file.filename}`,
+      index
+    ]);
+
     await db.query(
-      `INSERT INTO listing_images (item_id, image_url)
-       VALUES (?, ?)`,
-      [itemId, imageUrl]
+      `INSERT INTO listing_images (item_id, image_url, sort_order)
+       VALUES ?`,
+      [imageRecords]
     );
 
-    res.status(201).json({ success: true, imageUrl });
+    res.status(201).json({
+      success: true,
+      imageUrls: req.files.map(file => `/uploads/${file.filename}`)
+    });
   } catch (err) {
-    // Foreign key errors usually mean the item_id doesn't exist.
     if (err && (err.code === 'ER_NO_REFERENCED_ROW_2' || err.errno === 1452)) {
       return res.status(404).json({ success: false, error: 'Item not found' });
     }
 
     console.error(err);
-    res.status(500).json({ success: false, error: 'Failed to save image' });
+    res.status(500).json({ success: false, error: 'Failed to save images' });
   }
 });
-
 module.exports = router;

@@ -2,6 +2,8 @@ const form = document.getElementById('searchForm');
 const searchInput = document.getElementById('searchInput');
 const itemsContainer = document.getElementById('itemsContainer');
 const searchMeta = document.getElementById('searchMeta');
+const categoryFilter = document.getElementById('categoryFilter');
+const courseFilter = document.getElementById('courseFilter');
 
 function escapeHtml(value) {
   return String(value)
@@ -41,19 +43,31 @@ function renderItems(items) {
 }
 
 async function runSearch(query) {
-  if (!query) {
-    searchMeta.textContent = 'Enter a query to search items.';
+  const category = categoryFilter?.value || '';
+  const course = courseFilter?.value || '';
+
+  const params = new URLSearchParams();
+
+  if (query) params.set('q', query);
+  if (category) params.set('category_id', category);
+  if (course) params.set('course_id', course);
+
+  if (!query && !category && !course) {
+    searchMeta.textContent = 'Enter a query or select filters.';
     itemsContainer.innerHTML = '';
     return;
   }
 
-  searchMeta.textContent = `Results for "${query}"`;
+  searchMeta.textContent = 'Searching...';
 
   try {
-    const response = await fetch(`/api/items/search?q=${encodeURIComponent(query)}`);
+    const response = await fetch(`/api/items/search?${params.toString()}`);
     if (!response.ok) throw new Error('Search failed');
+
     const data = await response.json();
     renderItems(data.items || []);
+
+    searchMeta.textContent = `Found ${data.items.length} item(s)`;
   } catch (error) {
     itemsContainer.innerHTML =
       '<div class="empty">Search is temporarily unavailable.</div>';
@@ -62,14 +76,26 @@ async function runSearch(query) {
 
 form.addEventListener('submit', (event) => {
   event.preventDefault();
+
   const query = searchInput.value.trim();
-  const url = new URL(window.location.href);
-  url.searchParams.set('q', query);
-  window.history.pushState({}, '', url);
   runSearch(query);
+
+  const url = new URL(window.location.href);
+  if (query) url.searchParams.set('q', query);
+  if (categoryFilter.value) url.searchParams.set('category_id', categoryFilter.value);
+  if (courseFilter.value) url.searchParams.set('course_id', courseFilter.value);
+
+  window.history.pushState({}, '', url);
 });
 
 const params = new URLSearchParams(window.location.search);
+
 const initialQuery = params.get('q') || '';
+const initialCategory = params.get('category_id') || '';
+const initialCourse = params.get('course_id') || '';
+
 searchInput.value = initialQuery;
+if (categoryFilter) categoryFilter.value = initialCategory;
+if (courseFilter) courseFilter.value = initialCourse;
+
 runSearch(initialQuery);

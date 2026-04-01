@@ -41,6 +41,13 @@ CREATE TABLE pickup_locations (
     is_active BOOLEAN NOT NULL DEFAULT TRUE
 );
 
+CREATE TABLE courses (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    course_code VARCHAR(20) NOT NULL UNIQUE,   
+    course_name VARCHAR(255) NOT NULL          
+);
+
+
 CREATE TABLE items (
     id INT PRIMARY KEY AUTO_INCREMENT,
     seller_id INT NOT NULL,
@@ -48,6 +55,7 @@ CREATE TABLE items (
     description TEXT,
     price DECIMAL(10,2) NULL,
     category_id INT NULL,
+    course_id INT NULL,
     listing_type ENUM('sale', 'trade', 'sale_or_trade') NOT NULL DEFAULT 'sale',
     pickup_location_id INT NULL,
     status ENUM('active', 'sold', 'removed') NOT NULL DEFAULT 'active',
@@ -61,6 +69,10 @@ CREATE TABLE items (
 
     CONSTRAINT fk_items_category
         FOREIGN KEY (category_id) REFERENCES categories(id)
+        ON DELETE SET NULL,
+
+    CONSTRAINT fk_items_course
+        FOREIGN KEY (course_id) REFERENCES courses(id)
         ON DELETE SET NULL,
 
     CONSTRAINT fk_items_pickup_location
@@ -174,6 +186,10 @@ CREATE INDEX idx_items_pickup_location_id ON items(pickup_location_id);
 
 -- Listing images: fetch by item
 CREATE INDEX idx_listing_images_item_id ON listing_images(item_id);
+
+-- Courses: lookup by course code and name
+CREATE INDEX idx_courses_course_code ON courses(course_code);
+CREATE INDEX idx_courses_course_name ON courses(course_name);
 
 -- Conversations: lookup by user and recency
 CREATE INDEX idx_conversations_buyer_id ON conversations(buyer_id);
