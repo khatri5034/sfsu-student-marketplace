@@ -1,0 +1,236 @@
+:root {
+  --bg: #f8fafc;
+  --surface: #ffffff;
+  --surfaceSoft: #eef4ff;
+  --text: #0f172a;
+  --muted: #475569;
+  --border: #dbe4f0;
+  --btnBorder: #2952a3;
+  --btnHover: #edf4ff;
+  --shadow: 0 16px 40px rgba(15, 23, 42, 0.08);
+  --radius: 18px;
+}
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family:
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    Roboto,
+    Helvetica,
+    Arial,
+    "Apple Color Emoji",
+    "Segoe UI Emoji";
+  background:
+    radial-gradient(circle at top, #fdfefe 0%, #f8fafc 50%, #eef3f9 100%);
+  color: var(--text);
+}
+
+.page {
+  min-height: 100%;
+  width: min(1100px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 48px 0 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.header {
+  width: 100%;
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.header h1 {
+  margin: 0 0 10px;
+  font-size: clamp(2rem, 4vw, 3.25rem);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+.sub {
+  margin: 0;
+  color: var(--muted);
+  font-weight: 600;
+  line-height: 1.6;
+}
+
+.layout {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+/* Container for team member buttons */
+.memberList {
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 18px;
+}
+
+.memberBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 84px;
+  width: min(240px, 100%);
+  padding: 18px 20px;
+  border: 1.5px solid var(--border);
+  border-radius: 16px;
+  text-decoration: none;
+  color: var(--text);
+  font-weight: 800;
+  text-align: center;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  transition:
+    transform 140ms ease,
+    border-color 140ms ease,
+    background 140ms ease,
+    box-shadow 140ms ease;
+}
+
+.memberBtn:hover {
+  background: var(--btnHover);
+  border-color: var(--btnBorder);
+  transform: translateY(-2px);
+}
+
+/* Main card containing profile info */
+.aboutMeCard {
+  width: min(760px, 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 22px;
+  padding: 28px;
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+/* Container that holds the team member image */
+.aboutMePhoto {
+  width: min(220px, 100%);
+  aspect-ratio: 1 / 1;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+
+.aboutMePhotoText {
+  color: var(--btnBorder);
+  font-weight: 800;
+  line-height: 1.5;
+}
+
+/* Makes image fill the container properly */
+.aboutMeImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Title for sections like "About Me" */
+.hintTitle {
+  margin: 0;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--btnBorder);
+  font-weight: 800;
+  font-size: 0.92rem;
+}
+
+/* Box that holds the bio text */
+.hint {
+  width: 100%;
+  border-radius: 18px;
+  padding: 24px;
+  border: 1px solid rgba(37, 99, 235, 0.14);
+  background: linear-gradient(135deg, #ffffff, #f4f7ff);
+}
+
+.hint p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.7;
+  font-size: 1rem;
+}
+
+.footer {
+  margin-top: 36px;
+  text-align: center;
+}
+
+.homeLink {
+  color: var(--btnBorder);
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.homeLink:hover {
+  text-decoration: underline;
+}
+
+.footerCredit {
+  color: var(--muted);
+}
+
+/* Adjust layout for smaller screens */
+@media (max-width: 900px) {
+  .page {
+    width: min(100% - 24px, 1000px);
+    padding: 32px 0 28px;
+  }
+
+  .memberList {
+    gap: 14px;
+  }
+
+  .memberBtn {
+    width: calc(50% - 7px);
+  }
+
+  .aboutMeCard {
+    padding: 22px 18px;
+  }
+
+  .hint {
+    padding: 20px 18px;
+  }
+}
+
+/* Mobile layout adjustments */
+@media (max-width: 560px) {
+  .memberBtn {
+    width: 100%;
+    min-height: 72px;
+  }
+
+  .aboutMeCard {
+    gap: 18px;
+  }
+
+  .aboutMePhoto {
+    width: min(200px, 100%);
+  }
+}
