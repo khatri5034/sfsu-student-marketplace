@@ -1,4 +1,4 @@
-USE app_db;
+-- Database is selected by the mysql client (see seed-sample-data.sh / DB_NAME in .env)
 
 -- Insert Sample Categories 
 
