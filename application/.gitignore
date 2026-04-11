@@ -1,5 +1,7 @@
 node_modules/
 .env
+
+data.ms/
 *.log
 certbot/
 src/public/css/style.css

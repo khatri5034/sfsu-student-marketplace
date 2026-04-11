@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Marketplace Search</title>
+  </head>
+  <body>
+    <main class="page">
+      <h1>Search Items</h1>
+
+      <form class="topbar" id="searchForm">
+        <!-- Category Filter -->
+        <select id="categoryFilter">
+          <option value="">All Categories</option>
+          <option value="1">Textbooks</option>
+          <option value="2">Electronics</option>
+          <option value="1">Textbooks</option>
+          <option value="2">Electronics</option>
+          <option value="3">Furniture</option>
+          <option value="4">Clothing</option>
+          <option value="5">School Supplies</option>
+          <option value="6">Other</option>
+        </select>
+
+        <!-- Course Filter -->
+        <select id="courseFilter">
+          <option value="1">CSC 648</option>
+          <option value="2">CSC 415</option>
+          <option value="3">MATH 324</option>
+          <option value="4">CHEM 215</option>
+          <option value="5">PHYS 220</option>
+          <option value="">All Courses</option>
+        </select>
+
+        <!-- Text Search -->
+        <input id="searchInput" type="text" placeholder="Search items..." />
+
+        <button type="submit">Search</button>
+      </form>
+
+      <p class="meta" id="searchMeta">Enter a query to search items.</p>
+      <section class="items" id="itemsContainer"></section>
+    </main>
+
+    <script src="/js/search.js"></script>
+  </body>
+</html>
