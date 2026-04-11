@@ -19,53 +19,29 @@ body {
   color: var(--text);
 }
 
-/* Header */
-.site-header {
-  background: linear-gradient(to right, #2563eb, #3b82f6);
-  color: white;
-  padding: 16px 0;
-}
-
-.site-header-inner {
-  width: min(960px, calc(100% - 32px));
-  margin: 0 auto;
-}
-
-.brand-name {
-  font-weight: 700;
-  font-size: 1.2rem;
-}
-
-.brand-sub {
-  display: block;
-  font-size: 0.85rem;
-  opacity: 0.9;
-}
-
-/* Page layout */
 .page {
   width: min(960px, calc(100% - 32px));
   margin: 0 auto;
   padding: 28px 0 40px;
 }
 
-/* Search bar */
+h1 {
+  margin: 0 0 16px;
+  font-size: 1.8rem;
+}
+
 .topbar {
   display: flex;
   gap: 10px;
-  margin: 20px 0;
-}
-
-.topbar select,
-.topbar input {
-  padding: 12px 14px;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  font-size: 1rem;
+  margin-bottom: 18px;
 }
 
 .topbar input {
   flex: 1;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-size: 1rem;
 }
 
 .topbar button {
@@ -82,34 +58,41 @@ body {
   background: var(--accent-dark);
 }
 
-/* Meta */
 .meta {
   margin: 0 0 18px;
   color: var(--muted);
 }
 
-/* Items grid */
 .items {
   display: grid;
-  gap: 16px;
+  gap: 12px;
 }
 
-/* Card */
 .card {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: 1fr 140px;
+  gap: 16px;
   align-items: center;
-  gap: 20px;
 
   border: 1px solid var(--border);
-  border-radius: 14px;
+  border-radius: 12px;
   background: var(--surface);
-  padding: 16px;
+  padding: 14px;
 }
 
-/* Left content */
-.card-content {
-  flex: 1;
+.cardContent {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.cardImage {
+  width: 140px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 10px;
+  justify-self: end;
 }
 
 .card h3 {
@@ -121,7 +104,6 @@ body {
   color: var(--muted);
 }
 
-/* Info row */
 .row {
   display: flex;
   gap: 14px;
@@ -129,26 +111,10 @@ body {
   font-size: 0.95rem;
 }
 
-.cardImage {
-  width: 120px !important;
-  height: 120px !important;
-  object-fit: contain;
-  border-radius: 8px;
-}
-
-/* Empty state */
 .empty {
   border: 1px dashed var(--border);
   border-radius: 12px;
   padding: 16px;
   color: var(--muted);
   background: #fff;
-}
-
-/* Footer */
-.site-footer {
-  text-align: center;
-  padding: 20px;
-  color: var(--muted);
-  font-size: 0.9rem;
 }
