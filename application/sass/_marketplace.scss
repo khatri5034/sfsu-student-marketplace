@@ -69,10 +69,30 @@ h1 {
 }
 
 .card {
+  display: grid;
+  grid-template-columns: 1fr 140px;
+  gap: 16px;
+  align-items: center;
+
   border: 1px solid var(--border);
   border-radius: 12px;
   background: var(--surface);
   padding: 14px;
+}
+
+.cardContent {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.cardImage {
+  width: 140px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 10px;
+  justify-self: end;
 }
 
 .card h3 {

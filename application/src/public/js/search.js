@@ -29,6 +29,7 @@ function renderItems(items) {
       const status = escapeHtml(item.status || 'active');
       return `
         <article class="card">
+        <div class="cardContent">
           <h3>${title}</h3>
           <p>${description}</p>
           <div class="row">
@@ -36,6 +37,9 @@ function renderItems(items) {
             <span><strong>Type:</strong> ${listingType}</span>
             <span><strong>Status:</strong> ${status}</span>
           </div>
+        </div>
+
+        <img class="cardImage" src="/uploads/vp-placeholder.jpg" alt="${title}">
         </article>
       `;
     })

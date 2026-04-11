@@ -48,6 +48,7 @@ function renderItems(items) {
 
     return `
       <article class="card">
+      <div class="cardContect">
         <h3>${title}</h3>
         <p>${description}</p>
         <div class="row">
@@ -55,6 +56,9 @@ function renderItems(items) {
           ${type   ? `<span><strong>Type:</strong> ${type}</span>`     : ''}
           ${status ? `<span><strong>Status:</strong> ${status}</span>` : ''}
         </div>
+      </div>
+
+      <img class="cardImage" src="/uploads/vp-placeholder.jpg" alt="${title}">
       </article>
     `;
   }).join('');
