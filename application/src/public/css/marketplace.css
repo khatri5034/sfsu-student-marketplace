@@ -129,10 +129,9 @@ body {
   font-size: 0.95rem;
 }
 
-/* 🔥 IMAGE FIX (this was missing) */
-.card img {
-  width: 120px;
-  height: 120px;
+.cardImage {
+  width: 120px !important;
+  height: 120px !important;
   object-fit: contain;
   border-radius: 8px;
 }

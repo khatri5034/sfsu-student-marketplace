@@ -1,6 +1,7 @@
 const form = document.getElementById('searchForm');
 const searchInput = document.getElementById('searchInput');
 const categoryFilter = document.getElementById('categoryFilter');
+const courseFilter = document.getElementById('courseFilter');
 const itemsContainer = document.getElementById('itemsContainer');
 const itemCount = document.getElementById('itemCount');
 
@@ -10,10 +11,12 @@ form.addEventListener('submit', (e) => {
 
   const q = searchInput.value.trim();
   const cat = categoryFilter.value;
+  const course = courseFilter.value;
 
   const params = new URLSearchParams();
   if (q) params.set('q', q);
   if (cat) params.set('category_id', cat);
+  if (course) params.set('course_id', course);
 
   window.location.href = '/search?' + params.toString();
 });

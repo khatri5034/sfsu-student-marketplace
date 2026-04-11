@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Gator Frieghter Marketplace — CSC 648 Spring 2026 Team 14</title>
+    <title>Gator Freighter Marketplace — CSC 648 Spring 2026 Team 14</title>
     <link rel="stylesheet" href="/css/marketplace.css" />
   </head>
   <body>
@@ -19,6 +19,8 @@
 
     <main class="page">
       <form class="topbar" id="searchForm">
+
+        <!-- Category Filter -->
         <select id="categoryFilter">
           <option value="">All Categories</option>
           <option value="1">Textbooks</option>
@@ -28,7 +30,25 @@
           <option value="5">School Supplies</option>
           <option value="6">Other</option>
         </select>
-        <input id="searchInput" type="text" placeholder="Search items..." autocomplete="off" />
+
+        <!-- Course Filter (NEW) -->
+        <select id="courseFilter">
+          <option value="">All Courses</option>
+          <option value="1">CSC 648</option>
+          <option value="2">CSC 415</option>
+          <option value="3">MATH 324</option>
+          <option value="4">CHEM 215</option>
+          <option value="5">PHYS 220</option>
+        </select>
+
+        <!-- Search Input -->
+        <input
+          id="searchInput"
+          type="text"
+          placeholder="Search items..."
+          autocomplete="off"
+        />
+
         <button type="submit">Search</button>
       </form>
 
