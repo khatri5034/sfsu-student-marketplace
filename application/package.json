@@ -8,18 +8,21 @@
     "dev": "nodemon src/app.js",
     "sass:build": "sass sass/main.scss src/public/css/style.css --style=compressed --no-source-map",
     "sass:watch": "sass sass/main.scss src/public/css/style.css --watch --style=expanded",
+    "db:seed": "sh scripts/seed-sample-data.sh",
     "pm2:start": "pm2 start ecosystem.config.js",
     "pm2:stop": "pm2 stop ecosystem.config.js",
     "pm2:restart": "pm2 restart ecosystem.config.js",
     "pm2:logs": "pm2 logs"
   },
   "dependencies": {
-    "express": "~4.18.2",
-    "mysql2": "^3.9.0",
-    "dotenv": "^16.4.0",
-    "helmet": "^7.1.0",
     "cors": "^2.8.5",
-    "morgan": "^1.10.0"
+    "dotenv": "^16.4.0",
+    "express": "~4.18.2",
+    "helmet": "^7.1.0",
+    "meilisearch": "^0.56.0",
+    "morgan": "^1.10.0",
+    "multer": "^2.1.1",
+    "mysql2": "^3.9.0"
   },
   "devDependencies": {
     "nodemon": "^3.0.0",

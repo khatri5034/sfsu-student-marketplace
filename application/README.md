@@ -64,6 +64,18 @@ This starts three services:
 - **app** (Node/Express via PM2) on port `3000`
 - **nginx** (reverse proxy) on ports `80` / `443`
 
+On a fresh MySQL volume, schema is automatically initialized from:
+
+- `database/schema.sql`
+
+### 2.1 Seed sample data (optional, while app is running)
+
+```bash
+npm run db:seed
+```
+
+This inserts 2 sample users and 100 total sample items (50 each), then restarts the app so Meilisearch re-sync can run.
+
 ### 3. Local Development (without Docker)
 
 ```bash

@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Search — Gator Frieghter Marketplace</title>
+    <link rel="stylesheet" href="/css/marketplace.css" />
+  </head>
+  <body>
+
+    <header class="site-header">
+      <div class="site-header-inner">
+        <a href="/" class="brand">
+          <span class="brand-name">Campus Marketplace</span>
+          <span class="brand-sub">CSC 648 &bull; Spring 2026 &bull; Team 14</span>
+        </a>
+      </div>
+    </header>
+
+    <main class="page">
+      <form class="topbar" id="searchForm">
+        <select id="categoryFilter">
+          <option value="">All Categories</option>
+          <option value="1">Textbooks</option>
+          <option value="2">Electronics</option>
+          <option value="3">Furniture</option>
+          <option value="4">Clothing</option>
+          <option value="5">School Supplies</option>
+          <option value="6">Other</option>
+        </select>
+        <select id="courseFilter">
+          <option value="">All Courses</option>
+          <option value="1">CSC 648</option>
+          <option value="2">CSC 415</option>
+          <option value="3">MATH 324</option>
+          <option value="4">CHEM 215</option>
+          <option value="5">PHYS 220</option>
+        </select>
+        <input id="searchInput" type="text" placeholder="Search items..." autocomplete="off" />
+        <button type="submit">Search</button>
+      </form>
+
+      <p class="meta" id="searchMeta">Searching&hellip;</p>
+      <section class="items" id="itemsContainer"></section>
+    </main>
+
+    <footer class="site-footer">
+      <p>CSC 648 &bull; Software Engineering &bull; Spring 2026 &bull; Team 14</p>
+    </footer>
+
+    <script src="/js/search.js"></script>
+  </body>
+</html>
