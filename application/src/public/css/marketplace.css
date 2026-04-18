@@ -30,6 +30,10 @@ body {
   width: min(960px, calc(100% - 32px));
   margin: 0 auto;
 }
+.brand {
+  text-decoration: none;
+  color: white;
+}
 
 .brand-name {
   font-weight: 700;
