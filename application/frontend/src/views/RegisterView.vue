@@ -1,11 +1,6 @@
 <template>
   <div class="page">
     <div class="topbar">
-      <div class="logo">Gator Freighter</div>
-      <div class="top-links">
-        <router-link to="/login" class="top-link">Log in</router-link>
-        <router-link to="/register" class="top-button">Sign up</router-link>
-      </div>
     </div>
 
     <div class="content">
@@ -117,7 +112,8 @@ export default {
       }
 
       this.error = ''
-      alert('Account created')
+      localStorage.setItem('gf_user', JSON.stringify({ name: this.name, email: this.email }))
+      this.$router.push('/dashboard')
     }
   }
 }

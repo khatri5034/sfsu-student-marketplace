@@ -28,13 +28,13 @@ export default {
   data() {
     return {
       team: [
-        { name: 'Jordan Westover',   initials: 'JW', role: 'Frontend Lead',  bio: 'TODO', photo: null },
-        { name: 'Kiran Khatri',      initials: 'KK', role: 'TODO',           bio: 'TODO', photo: null },
-        { name: 'Leslie Garcia',     initials: 'LG', role: 'TODO',           bio: 'TODO', photo: null },
-        { name: 'Christopher Huynh', initials: 'CH', role: 'TODO',           bio: 'TODO', photo: null },
-        { name: 'Gursimran Grewal',  initials: 'GG', role: 'TODO',           bio: 'TODO', photo: null },
-        { name: 'Stiofan Condon',    initials: 'SC', role: 'TODO',           bio: 'TODO', photo: null },
-        { name: 'Gabriel Purizaca',  initials: 'GP', role: 'TODO',           bio: 'TODO', photo: null },
+        { name: 'Leslie Garcia',     initials: 'LG', role: 'Team Lead',  bio: "Hello! I'm Leslie Garcia and I'm a senior at San Frasncisco State University who is currently pursing a Computer Science degree. I graduate in May 2026 and a few of my interests include sewing, dancing, and watching indie films. I am passionate about software development and am eager to continue learning more about maintaining software applications.", photo: null },
+        { name: 'Jordan Westover',   initials: 'JW', role: 'Front-End Lead',           bio: "Hi there! I am Jordan Westover, a senior Computer Science student at San Francisco State University. I am interested in golf, gaming, and camping. While I've enjoyed the hardware aspect of computing, I got into programming because of the problem solving and creative outlet it offers.", photo: null },
+        { name: 'Gursimran Grewal',  initials: 'GG', role: 'GitHub Maintainer',           bio: " Hi, I’m Gursimran Grewal, a Computer Science student at San Francisco State University. I’m passionate about software engineering, backend development, and building scalablesystems. I enjoy working with technologies like Node.js, Docker, MySQL, and AWS, and I’m currently focused on strengthening my DevOps and system design skills.", photo: null },
+        { name: 'Stiofan Condon',    initials: 'SC', role: 'Back-End Lead',           bio: " I am a Computer Science student at San Francisco State University. My interests include gaming, 3D printing, and experimenting with different kinds computer hardware. I also enjoy getting out when I can to ski, hike, or just explore.", photo: null },
+        { name: 'Kiran Khatri',      initials: 'KK', role: 'TODO',           bio: "Hey! I'm Kiran Khatri — a senior at San Francisco State University studying Computer Science and graduating in May 2026. I'm an international student who loves watching sci‑fi movies and hiking, and I'm interested in artificial intelligence and machine learning applications in robotics.", photo: null },
+        { name: 'Christopher Huynh', initials: 'CH', role: 'TODO',           bio: "I'm a Senior majoring in  Computer Science  who's into exploring nature, video games, reading and e-sports. In terms of academics, I enjoy taking math classes, and more lower level programming. I Also enjoy taking random classes to just learn more things.", photo: null },
+        { name: 'Gabriel Purizaca',  initials: 'GP', role: 'TODO',           bio: "Hi! I'm Gabriel Purizaca, a Computer Science student at San Francisco State University. I enjoy solving challenging problems, learning how systems operate at a deeper level, and algorithms. Outside of school, my hobbies are basketball, cooking, and investing. I also love trying new foods!", photo: null },
       ]
     }
   }

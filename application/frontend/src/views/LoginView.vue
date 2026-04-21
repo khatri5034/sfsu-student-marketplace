@@ -1,11 +1,8 @@
+
 <template>
   <div class="page">
     <div class="topbar">
-      <div class="logo">Gator Freighter</div>
-      <div class="top-links">
-        <router-link to="/login" class="top-link active">Log in</router-link>
-        <router-link to="/register" class="top-button">Sign up</router-link>
-      </div>
+      
     </div>
 
     <div class="content">
@@ -96,7 +93,9 @@ export default {
       }
 
       this.error = ''
-      alert('Login submitted')
+      const name = this.email.split('@')[0].replace(/\d+/g, '').replace(/^\w/, c => c.toUpperCase())
+      localStorage.setItem('gf_user', JSON.stringify({ name, email: this.email }))
+      this.$router.push('/dashboard')
     }
   }
 }

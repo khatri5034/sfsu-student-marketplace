@@ -26,6 +26,7 @@
     </div>
     <div class="footer-bottom">
       <p>© 2026 Gator Freighter · CSC 648 Team 14 · SFSU</p>
+      <p class="disclaimer">SFSU Software Engineering Project CSC 648-848, Spring 2026. For Demonstration Only.</p>
     </div>
   </footer>
 </template>
@@ -90,5 +91,14 @@ export default { name: 'AppFooter' }
   padding: 18px 42px;
   text-align: center;
   font-size: 13px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.disclaimer {
+  font-size: 11px;
+  color: #6b7280;
+  letter-spacing: 0.3px;
 }
 </style>

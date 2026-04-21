@@ -11,6 +11,7 @@
         <router-link to="/register" class="nav-button">Sign up</router-link>
       </template>
       <template v-else>
+        <router-link to="/create-listing" class="nav-button nav-button--post">+ Post Listing</router-link>
         <router-link to="/dashboard" class="nav-link">Dashboard</router-link>
         <router-link to="/messages" class="nav-link">Messages</router-link>
         <button class="nav-button nav-button--outline" @click="logout">Log out</button>
@@ -23,10 +24,16 @@
 export default {
   name: 'NavBar',
   data() {
-    return { loggedIn: false }
+    return { loggedIn: !!localStorage.getItem('gf_user') }
+  },
+  watch: {
+    $route() {
+      this.loggedIn = !!localStorage.getItem('gf_user')
+    }
   },
   methods: {
     logout() {
+      localStorage.removeItem('gf_user')
       this.loggedIn = false
       this.$router.push('/login')
     }
@@ -85,6 +92,10 @@ export default {
 }
 
 .nav-button:hover { background: #4338ca; }
+
+.nav-button--post {
+  background: linear-gradient(135deg, #4f46e5, #6366f1);
+}
 
 .nav-button--outline {
   background: transparent;
