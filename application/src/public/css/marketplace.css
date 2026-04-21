@@ -45,6 +45,11 @@ body {
   font-size: 0.85rem;
   opacity: 0.9;
 }
+.about {
+  text-decoration: none;
+  color: white;
+  text-align: right;
+}
 
 /* Page layout */
 .page {
