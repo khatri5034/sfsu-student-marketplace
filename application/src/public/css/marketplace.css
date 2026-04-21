@@ -30,6 +30,10 @@ body {
   width: min(960px, calc(100% - 32px));
   margin: 0 auto;
 }
+.brand {
+  text-decoration: none;
+  color: white;
+}
 
 .header-with-auth {
   position: relative;
@@ -70,6 +74,11 @@ body {
   display: block;
   font-size: 0.85rem;
   opacity: 0.9;
+}
+.about {
+  text-decoration: none;
+  color: white;
+  text-align: right;
 }
 
 /* Page layout */
