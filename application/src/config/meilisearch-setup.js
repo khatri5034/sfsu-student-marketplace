@@ -21,6 +21,7 @@ async function setupMeilisearchIndexes() {
         'title',
         'description',
         'price',
+        'image_url',
         'category_id',
         'course_id',
         'course_name',
@@ -42,6 +43,13 @@ async function setupMeilisearchIndexes() {
           i.title,
           i.description,
           i.price,
+          (
+            SELECT li.image_url
+            FROM listing_images li
+            WHERE li.item_id = i.id
+            ORDER BY li.sort_order ASC, li.id ASC
+            LIMIT 1
+          ) AS image_url,
           i.category_id,
           i.course_id,
           c.course_code,
