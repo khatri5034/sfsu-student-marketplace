@@ -1,4 +1,5 @@
 require('dotenv').config();
+const fs = require('fs');
 const express = require('express');
 const helmet = require('helmet');
 const cors = require('cors');
@@ -10,6 +11,9 @@ const indexRoutes = require('./routes/index');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+const distDir = path.join(__dirname, '..', 'frontend', 'dist');
+const publicDir = path.join(__dirname, 'public');
 
 const isDevelopment = app.get('env') === 'development';
 
@@ -32,7 +36,9 @@ app.use(cors());
 app.use(morgan('combined'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static(path.join(__dirname, 'public')));
+
+app.use('/', indexRoutes);
+
 // Serve uploaded images from a persistent directory at `/uploads/...`.
 // Docker WORKDIR is `/usr/src/app`, so `../public/uploads` maps to `/usr/src/app/public/uploads`.
 app.use(
@@ -40,7 +46,36 @@ app.use(
   express.static(path.join(__dirname, '..', 'public', 'uploads'))
 );
 
-app.use('/', indexRoutes);
+// Legacy static files (e.g. milestone team pages). `index: false` avoids shadowing SPA paths like `/dashboard`.
+app.use(express.static(publicDir, { index: false }));
+app.use(express.static(distDir));
+
+const indexHtmlPath = path.join(distDir, 'index.html');
+const spaIndexReady = fs.existsSync(indexHtmlPath);
+
+if (process.env.NODE_ENV === 'production' && !spaIndexReady) {
+  console.error(
+    'Production requires a built Vue app. Run: npm run build:frontend (from application/) before start.'
+  );
+  process.exit(1);
+}
+
+app.get('*', (req, res, next) => {
+  if (req.method !== 'GET' && req.method !== 'HEAD') {
+    return next();
+  }
+  if (req.path.startsWith('/api')) {
+    return res.status(404).json({ error: 'Not found' });
+  }
+  if (!spaIndexReady) {
+    return res.status(503).type('text/plain').send(
+      'Frontend not built. Run: npm run build:frontend (from application/) or npm run build in application/frontend.'
+    );
+  }
+  res.sendFile(indexHtmlPath, err => {
+    if (err) next(err);
+  });
+});
 
 app.use((err, req, res, next) => {
   console.error(err.stack);
