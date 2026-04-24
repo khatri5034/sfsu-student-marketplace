@@ -4,31 +4,46 @@
       <div class="location-name">📍 {{ selectedLocation.name }}</div>
       <div class="location-desc">{{ selectedLocation.description }}</div>
     </div>
-    <select v-else :value="modelValue" @change="$emit('update:modelValue', +$event.target.value)" required>
-      <option value="" disabled>Select a campus location...</option>
-      <option v-for="loc in pickupLocations" :key="loc.id" :value="loc.id">
-        {{ loc.name }} — {{ loc.description }}
+    <select
+      v-else
+      :value="modelValue === null || modelValue === undefined ? '' : modelValue"
+      @change="onChange"
+    >
+      <option value="">No specific location (optional)</option>
+      <option v-for="loc in locations" :key="loc.id" :value="loc.id">
+        {{ loc.name }} — {{ locSubtitle(loc) }}
       </option>
     </select>
   </div>
 </template>
 
 <script>
-import { pickupLocations } from '../data/mockData.js'
-
 export default {
   name: 'MeetupLocationPicker',
   emits: ['update:modelValue'],
   props: {
-    modelValue: { type: Number, default: null },
-    readonly: { type: Boolean, default: false }
-  },
-  data() {
-    return { pickupLocations }
+    modelValue: { default: null },
+    readonly: { type: Boolean, default: false },
+    locations: { type: Array, default: () => [] }
   },
   computed: {
     selectedLocation() {
-      return this.pickupLocations.find(l => l.id === this.modelValue) || { name: 'Not specified', description: '' }
+      const loc = this.locations.find(l => l.id === this.modelValue)
+      if (!loc) return { name: 'Not specified', description: '' }
+      return {
+        name: loc.name,
+        description: this.locSubtitle(loc)
+      }
+    }
+  },
+  methods: {
+    locSubtitle(loc) {
+      return (loc.description || loc.location || '').toString() || 'Campus meetup'
+    },
+    onChange(e) {
+      const v = e.target.value
+      if (v === '') this.$emit('update:modelValue', null)
+      else this.$emit('update:modelValue', Number.parseInt(v, 10))
     }
   }
 }

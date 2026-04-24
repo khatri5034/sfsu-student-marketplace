@@ -4,9 +4,10 @@
       <div class="search-header">
         <h1>Browse Listings</h1>
         <div class="search-bar">
-          <input v-model="query" type="text" placeholder="Search for textbooks, electronics, furniture..." @keyup.enter="handleSearch" />
-          <button class="btn-primary" @click="handleSearch">Search</button>
+          <input v-model="query" type="text" placeholder="Search for textbooks, electronics, furniture..." @keyup.enter="runSearch" />
+          <button class="btn-primary" @click="runSearch" :disabled="loading">{{ loading ? '…' : 'Search' }}</button>
         </div>
+        <p v-if="loadError" class="load-error">{{ loadError }}</p>
       </div>
 
       <div class="search-layout">
@@ -14,32 +15,21 @@
           <h3>Filter By</h3>
           <div class="filter-group">
             <label>Category</label>
-            <select v-model="filters.category">
+            <select v-model="filters.categoryId" @change="runSearch">
               <option value="">All Categories</option>
-              <option v-for="cat in categories" :key="cat.value" :value="cat.value">{{ cat.label }}</option>
+              <option v-for="cat in categories" :key="cat.id" :value="String(cat.id)">{{ cat.name }}</option>
             </select>
           </div>
           <div class="filter-group">
             <label>Course</label>
-            <select v-model="filters.course">
+            <select v-model="filters.courseId" @change="runSearch">
               <option value="">All Courses</option>
-              <option v-for="c in courses" :key="c" :value="c">{{ c }}</option>
+              <option v-for="c in courses" :key="c.id" :value="String(c.id)">{{ c.course_code }} — {{ c.course_name }}</option>
             </select>
           </div>
           <div class="filter-group">
             <label>Max Price</label>
-            <input v-model="filters.maxPrice" type="number" placeholder="$0.00" />
-          </div>
-          <div class="filter-group">
-            <label>Condition</label>
-            <select v-model="filters.condition">
-              <option value="">Any Condition</option>
-              <option value="New">New</option>
-              <option value="Like New">Like New</option>
-              <option value="Good">Good</option>
-              <option value="Fair">Fair</option>
-              <option value="Poor">Poor</option>
-            </select>
+            <input v-model="filters.maxPrice" type="number" placeholder="No limit" min="0" step="0.01" @change="applyLocalFilters" />
           </div>
           <button class="btn-secondary" @click="clearFilters">Clear Filters</button>
         </aside>
@@ -68,7 +58,7 @@
 
 <script>
 import ListingCard from '../components/ListingCard.vue'
-import { listings, categories, courses } from '../data/mockData.js'
+import { apiJson, mapSearchHit } from '../api.js'
 
 export default {
   name: 'SearchView',
@@ -76,30 +66,73 @@ export default {
   data() {
     return {
       query: '',
-      filters: { category: '', course: '', maxPrice: '', condition: '' },
-      listings,
-      categories,
-      courses
+      filters: { categoryId: '', courseId: '', maxPrice: '' },
+      categories: [],
+      courses: [],
+      listings: [],
+      categoryNameById: {},
+      loading: false,
+      loadError: ''
     }
   },
   computed: {
     filteredListings() {
-      return this.listings.filter(l => {
-        if (this.query && !l.title.toLowerCase().includes(this.query.toLowerCase()) &&
-            !l.description.toLowerCase().includes(this.query.toLowerCase())) return false
-        if (this.filters.category && l.category !== this.filters.category) return false
-        if (this.filters.course && l.course !== this.filters.course) return false
-        if (this.filters.maxPrice && l.price > parseFloat(this.filters.maxPrice)) return false
-        if (this.filters.condition && l.condition !== this.filters.condition) return false
-        return true
-      })
+      const max = this.filters.maxPrice === '' ? null : Number(this.filters.maxPrice)
+      if (max != null && !Number.isNaN(max)) {
+        return this.listings.filter(l => l.price <= max)
+      }
+      return this.listings
     }
   },
+  async mounted() {
+    await this.loadMeta()
+    await this.runSearch()
+  },
   methods: {
-    handleSearch() {},
+    async loadMeta() {
+      try {
+        const [catRes, courseRes] = await Promise.all([
+          apiJson('/api/meta/categories'),
+          apiJson('/api/meta/courses')
+        ])
+        this.categories = catRes.categories || []
+        this.courses = courseRes.courses || []
+        const map = {}
+        for (const c of this.categories) map[c.id] = c.name
+        this.categoryNameById = map
+      } catch (e) {
+        this.loadError = e.message || 'Could not load filters.'
+      }
+    },
+    buildQuery() {
+      const p = new URLSearchParams()
+      if (this.query.trim()) p.set('q', this.query.trim())
+      if (this.filters.categoryId) p.set('category_id', this.filters.categoryId)
+      if (this.filters.courseId) p.set('course_id', this.filters.courseId)
+      const qs = p.toString()
+      return qs ? `/api/items/search?${qs}` : '/api/items/search'
+    },
+    async runSearch() {
+      this.loading = true
+      this.loadError = ''
+      try {
+        const data = await apiJson(this.buildQuery())
+        const hits = data.items || []
+        this.listings = hits.map(h => mapSearchHit(h, this.categoryNameById))
+      } catch (e) {
+        this.loadError = e.message || 'Search failed.'
+        this.listings = []
+      } finally {
+        this.loading = false
+      }
+    },
+    applyLocalFilters() {
+      /* max price is computed-only */
+    },
     clearFilters() {
       this.query = ''
-      this.filters = { category: '', course: '', maxPrice: '', condition: '' }
+      this.filters = { categoryId: '', courseId: '', maxPrice: '' }
+      this.runSearch()
     }
   }
 }
@@ -109,6 +142,8 @@ export default {
 .search-page { padding: 40px 0 80px; background: #f8faff; }
 
 .search-header { margin-bottom: 36px; }
+
+.load-error { color: #dc2626; font-size: 14px; margin-top: 10px; }
 
 h1 { font-size: 40px; color: #111827; margin-bottom: 18px; }
 

@@ -28,10 +28,16 @@
             Access your dashboard, listings, and messages.
           </p>
 
-          <form @submit.prevent="handleLogin" class="form">
+          <form novalidate class="form" @submit.prevent="handleLogin">
             <div class="field">
               <label>Email</label>
-              <input v-model="email" type="email" placeholder="yourname@sfsu.edu" />
+              <input
+                v-model="email"
+                type="email"
+                name="email"
+                autocomplete="username"
+                placeholder="yourname@sfsu.edu"
+              />
             </div>
 
             <div class="field">
@@ -40,6 +46,8 @@
                 <input
                   v-model="password"
                   :type="showPassword ? 'text' : 'password'"
+                  name="password"
+                  autocomplete="current-password"
                   placeholder="Enter your password"
                 />
                 <button type="button" class="toggle-btn" @click="showPassword = !showPassword">
@@ -50,7 +58,7 @@
 
             <p v-if="error" class="error">{{ error }}</p>
 
-            <button class="btn" type="submit">Log In</button>
+            <button class="btn" type="submit" :disabled="loading">{{ loading ? '…' : 'Log In' }}</button>
           </form>
 
           <p class="switch">
@@ -64,17 +72,20 @@
 </template>
 
 <script>
+import { apiJson } from '../api.js'
+
 export default {
   data() {
     return {
       email: '',
       password: '',
       showPassword: false,
-      error: ''
+      error: '',
+      loading: false
     }
   },
   methods: {
-    handleLogin() {
+    async handleLogin() {
       const pattern = /^[^\s@]+@sfsu\.edu$/i
 
       if (!this.email || !this.password) {
@@ -87,15 +98,30 @@ export default {
         return
       }
 
-      if (this.password.length < 6) {
-        this.error = 'Password must be at least 6 characters.'
-        return
-      }
-
       this.error = ''
-      const name = this.email.split('@')[0].replace(/\d+/g, '').replace(/^\w/, c => c.toUpperCase())
-      localStorage.setItem('gf_user', JSON.stringify({ name, email: this.email }))
-      this.$router.push('/dashboard')
+      this.loading = true
+      try {
+        const u = await apiJson('/api/auth/login', {
+          method: 'POST',
+          body: JSON.stringify({ email: this.email.trim().toLowerCase(), password: this.password })
+        })
+        const name = `${u.first_name || ''} ${u.last_name || ''}`.trim() || u.school_email
+        localStorage.setItem(
+          'gf_user',
+          JSON.stringify({
+            id: u.id,
+            email: u.school_email,
+            first_name: u.first_name,
+            last_name: u.last_name,
+            name
+          })
+        )
+        this.$router.push('/dashboard')
+      } catch (e) {
+        this.error = e.message || 'Login failed.'
+      } finally {
+        this.loading = false
+      }
     }
   }
 }
@@ -296,6 +322,8 @@ input:focus {
   font-weight: 700;
   cursor: pointer;
 }
+
+.btn:disabled { opacity: 0.6; cursor: not-allowed; }
 
 .error {
   color: #dc2626;

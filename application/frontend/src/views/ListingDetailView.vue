@@ -3,7 +3,10 @@
     <div class="container">
       <router-link to="/search" class="back-link">← Back to Listings</router-link>
 
-      <div v-if="listing" class="detail-layout">
+      <p v-if="loadError" class="load-error">{{ loadError }}</p>
+      <p v-if="loading" class="loading">Loading…</p>
+
+      <div v-if="listing && !loading" class="detail-layout">
         <div class="image-section">
           <div class="main-image">
             <img v-if="listing.image" :src="listing.image" :alt="listing.title" />
@@ -13,7 +16,7 @@
 
         <div class="info-section">
           <div class="badges">
-            <span class="badge badge--category">{{ categoryLabel }}</span>
+            <span class="badge badge--category">{{ listing.categoryLabel }}</span>
             <span class="badge" :class="typeClass">{{ typeLabel }}</span>
             <span v-if="listing.course" class="badge badge--course">{{ listing.course }}</span>
           </div>
@@ -33,14 +36,18 @@
 
           <div class="meetup-section">
             <h3>Pickup Location</h3>
-            <MeetupLocationPicker :modelValue="listing.pickupLocationId" :readonly="true" />
+            <MeetupLocationPicker
+              :modelValue="listing.pickupLocationId"
+              :readonly="true"
+              :locations="pickupLocations"
+            />
           </div>
 
           <div class="seller-card">
-            <div class="seller-avatar">{{ listing.sellerName[0] }}</div>
+            <div class="seller-avatar">{{ sellerInitial }}</div>
             <div class="seller-info">
               <p class="seller-name">{{ listing.sellerName }}</p>
-              <p class="seller-since">SFSU Student · Member since April 2026</p>
+              <p class="seller-since">{{ listing.sellerEmail }}</p>
             </div>
           </div>
 
@@ -49,7 +56,7 @@
             <router-link to="/login" class="btn-primary">Log in to Message</router-link>
           </div>
           <div v-else class="actions">
-            <button class="btn-primary" @click="messageSeller">💬 Message Seller</button>
+            <button class="btn-primary" :disabled="msgBusy" @click="messageSeller">{{ msgBusy ? '…' : '💬 Message Seller' }}</button>
             <button
               v-if="listing.listingType !== 'sale'"
               class="btn-secondary"
@@ -59,7 +66,7 @@
         </div>
       </div>
 
-      <div v-else class="not-found">
+      <div v-else-if="!loading && !loadError" class="not-found">
         <p>Listing not found.</p>
         <router-link to="/search" class="btn-primary">Back to Search</router-link>
       </div>
@@ -74,9 +81,9 @@
 </template>
 
 <script>
-import { listings, categories, pickupLocations } from '../data/mockData.js'
 import MeetupLocationPicker from '../components/MeetupLocationPicker.vue'
 import TradeRequestModal from '../components/TradeRequestModal.vue'
+import { apiJson, mapDetailToListing, getStoredUser } from '../api.js'
 
 export default {
   name: 'ListingDetailView',
@@ -85,18 +92,17 @@ export default {
     return {
       showTradeModal: false,
       loggedIn: !!localStorage.getItem('gf_user'),
-      pickupLocations,
-      categories
+      pickupLocations: [],
+      listing: null,
+      loading: true,
+      loadError: '',
+      msgBusy: false
     }
   },
   computed: {
-    listing() {
-      const id = parseInt(this.$route.params.id)
-      return listings.find(l => l.id === id) || null
-    },
-    categoryLabel() {
-      const cat = this.categories.find(c => c.value === this.listing?.category)
-      return cat ? cat.label : this.listing?.category
+    sellerInitial() {
+      const n = this.listing?.sellerName || '?'
+      return n.trim().charAt(0).toUpperCase()
     },
     typeLabel() {
       const map = { sale: 'For Sale', trade: 'Trade Only', both: 'Sale or Trade' }
@@ -107,12 +113,54 @@ export default {
       return map[this.listing?.listingType] || ''
     }
   },
+  watch: {
+    '$route.params.id'() {
+      this.fetchAll()
+    }
+  },
   mounted() {
     this.loggedIn = !!localStorage.getItem('gf_user')
+    this.fetchAll()
   },
   methods: {
-    messageSeller() {
-      this.$router.push(`/messages?listing=${this.listing.id}`)
+    async fetchAll() {
+      this.loading = true
+      this.loadError = ''
+      this.listing = null
+      const id = Number.parseInt(this.$route.params.id, 10)
+      if (!Number.isInteger(id)) {
+        this.loading = false
+        return
+      }
+      try {
+        const [meta, detail] = await Promise.all([
+          apiJson('/api/meta/pickup-locations'),
+          apiJson(`/api/items/${id}`)
+        ])
+        this.pickupLocations = meta.pickup_locations || []
+        this.listing = mapDetailToListing(detail.item, detail.images)
+      } catch (e) {
+        if (e.status === 404) this.listing = null
+        else this.loadError = e.message || 'Failed to load listing.'
+      } finally {
+        this.loading = false
+      }
+    },
+    async messageSeller() {
+      const user = getStoredUser()
+      if (!user?.id || !this.listing) return
+      this.msgBusy = true
+      try {
+        const data = await apiJson('/api/conversations', {
+          method: 'POST',
+          body: JSON.stringify({ buyer_id: user.id, item_id: this.listing.id })
+        })
+        this.$router.push(`/messages?conversation=${data.conversation_id}`)
+      } catch (e) {
+        this.loadError = e.message || 'Could not start conversation.'
+      } finally {
+        this.msgBusy = false
+      }
     }
   }
 }
@@ -120,6 +168,9 @@ export default {
 
 <style scoped>
 .detail-page { padding: 40px 0 80px; background: #f8faff; min-height: 100vh; }
+
+.load-error { color: #dc2626; margin-bottom: 16px; }
+.loading { color: #6b7280; }
 
 .back-link {
   display: inline-block;

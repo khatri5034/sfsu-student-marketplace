@@ -61,36 +61,28 @@
             <div class="form-row">
               <div class="form-group">
                 <label>Category *</label>
-                <select v-model="form.category" required>
+                <select v-model="form.categoryId" required>
                   <option value="" disabled>Select a category...</option>
-                  <option v-for="cat in categories" :key="cat.value" :value="cat.value">{{ cat.label }}</option>
-                </select>
-              </div>
-
-              <div class="form-group">
-                <label>Condition *</label>
-                <select v-model="form.condition" required>
-                  <option value="" disabled>Select condition...</option>
-                  <option v-for="c in conditions" :key="c" :value="c">{{ c }}</option>
+                  <option v-for="cat in categories" :key="cat.id" :value="String(cat.id)">{{ cat.name }}</option>
                 </select>
               </div>
             </div>
 
             <div class="form-group">
               <label>Related Course <span class="optional-note">— optional</span></label>
-              <select v-model="form.course">
+              <select v-model="form.courseId">
                 <option value="">Not course-related</option>
-                <option v-for="c in courses" :key="c" :value="c">{{ c }}</option>
+                <option v-for="c in courses" :key="c.id" :value="String(c.id)">{{ c.course_code }} — {{ c.course_name }}</option>
               </select>
             </div>
 
             <div class="form-group">
-              <label>Campus Pickup Location *</label>
-              <MeetupLocationPicker v-model="form.pickupLocationId" />
+              <label>Campus Pickup Location <span class="optional-note">— optional</span></label>
+              <MeetupLocationPicker v-model="form.pickupLocationId" :locations="pickupLocations" />
             </div>
 
             <div class="form-group">
-              <label>Image <span class="optional-note">— optional (demo mode)</span></label>
+              <label>Image <span class="optional-note">— optional</span></label>
               <div class="file-upload" @click="$refs.fileInput.click()">
                 <div v-if="imagePreview" class="image-preview">
                   <img :src="imagePreview" alt="Preview" />
@@ -108,7 +100,7 @@
 
             <div class="form-actions">
               <router-link to="/dashboard" class="btn-secondary">Cancel</router-link>
-              <button type="submit" class="btn-primary">Post Listing</button>
+              <button type="submit" class="btn-primary" :disabled="submitting">{{ submitting ? '…' : 'Post Listing' }}</button>
             </div>
           </form>
         </div>
@@ -118,17 +110,17 @@
 </template>
 
 <script>
-import { listings, categories, courses } from '../data/mockData.js'
 import MeetupLocationPicker from '../components/MeetupLocationPicker.vue'
+import { apiJson, getStoredUser } from '../api.js'
 
 export default {
   name: 'CreateListingView',
   components: { MeetupLocationPicker },
   data() {
     return {
-      categories,
-      courses,
-      conditions: ['New', 'Like New', 'Good', 'Fair', 'Poor'],
+      categories: [],
+      courses: [],
+      pickupLocations: [],
       typeOptions: [
         { value: 'sale', label: 'For Sale' },
         { value: 'trade', label: 'Trade Only' },
@@ -139,51 +131,102 @@ export default {
         description: '',
         listingType: 'sale',
         price: '',
-        category: '',
-        condition: '',
-        course: '',
+        categoryId: '',
+        courseId: '',
         pickupLocationId: null
       },
+      imageFile: null,
       imagePreview: null,
       error: '',
-      success: false
+      success: false,
+      submitting: false
+    }
+  },
+  async mounted() {
+    const user = getStoredUser()
+    if (!user?.id) {
+      this.$router.push('/login')
+      return
+    }
+    try {
+      const [catRes, courseRes, locRes] = await Promise.all([
+        apiJson('/api/meta/categories'),
+        apiJson('/api/meta/courses'),
+        apiJson('/api/meta/pickup-locations')
+      ])
+      this.categories = catRes.categories || []
+      this.courses = courseRes.courses || []
+      this.pickupLocations = locRes.pickup_locations || []
+    } catch (e) {
+      this.error = e.message || 'Could not load form data.'
     }
   },
   methods: {
     handleImage(e) {
       const file = e.target.files[0]
       if (!file) return
+      this.imageFile = file
       const reader = new FileReader()
-      reader.onload = (ev) => { this.imagePreview = ev.target.result }
+      reader.onload = ev => {
+        this.imagePreview = ev.target.result
+      }
       reader.readAsDataURL(file)
     },
-    submitListing() {
-      if (!this.form.pickupLocationId) {
-        this.error = 'Please select a campus pickup location.'
+    async submitListing() {
+      const user = getStoredUser()
+      if (!user?.id) {
+        this.$router.push('/login')
         return
       }
+
       this.error = ''
+      this.submitting = true
+      try {
+        const body = {
+          seller_id: user.id,
+          title: this.form.title.trim(),
+          description: this.form.description.trim(),
+          listing_type: this.form.listingType,
+          category_id: this.form.categoryId ? Number.parseInt(this.form.categoryId, 10) : null,
+          course_id: this.form.courseId ? Number.parseInt(this.form.courseId, 10) : null,
+          pickup_location_id: this.form.pickupLocationId
+        }
+        if (this.form.listingType !== 'trade') {
+          body.price = this.form.price === '' ? 0 : Number(this.form.price)
+        }
 
-      const user = JSON.parse(localStorage.getItem('gf_user') || '{}')
-      const newListing = {
-        id: Date.now(),
-        title: this.form.title,
-        description: this.form.description,
-        price: this.form.listingType === 'trade' ? 0 : parseFloat(this.form.price) || 0,
-        category: this.form.category,
-        course: this.form.course || null,
-        condition: this.form.condition,
-        listingType: this.form.listingType,
-        pickupLocationId: this.form.pickupLocationId,
-        image: this.imagePreview || null,
-        sellerName: user.name || 'You',
-        sellerEmail: user.email || '',
-        createdAt: new Date().toISOString().split('T')[0]
+        const created = await apiJson('/api/items', {
+          method: 'POST',
+          body: JSON.stringify(body)
+        })
+
+        if (this.imageFile) {
+          const fd = new FormData()
+          fd.append('images', this.imageFile)
+          const r = await fetch(`/api/items/${created.id}/images`, {
+            method: 'POST',
+            body: fd
+          })
+          if (!r.ok) {
+            const t = await r.text()
+            let msg = t
+            try {
+              const j = JSON.parse(t)
+              msg = j.error || t
+            } catch {
+              /* use text */
+            }
+            throw new Error(msg || 'Image upload failed')
+          }
+        }
+
+        this.success = true
+        setTimeout(() => this.$router.push('/dashboard'), 1200)
+      } catch (e) {
+        this.error = e.message || 'Could not create listing.'
+      } finally {
+        this.submitting = false
       }
-
-      listings.push(newListing)
-      this.success = true
-      setTimeout(() => this.$router.push('/dashboard'), 1500)
     }
   }
 }

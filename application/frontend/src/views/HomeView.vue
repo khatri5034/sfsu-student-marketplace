@@ -15,6 +15,26 @@
       </div>
     </section>
 
+    <section v-if="listings.length" class="featured">
+      <div class="container">
+        <h2 class="featured-title">Fresh listings</h2>
+        <p class="featured-sub">Recently posted on Gator Freighter</p>
+        <div class="listings-grid">
+          <router-link
+            v-for="listing in listings"
+            :key="listing.id"
+            :to="'/listing/' + listing.id"
+            class="card-link"
+          >
+            <ListingCard :listing="listing" />
+          </router-link>
+        </div>
+        <div class="featured-cta">
+          <router-link to="/search" class="btn-primary">See all listings</router-link>
+        </div>
+      </div>
+    </section>
+
     <section class="features">
       <div class="container">
         <div class="feature-grid">
@@ -40,7 +60,24 @@
 </template>
 
 <script>
-export default { name: 'HomeView' }
+import ListingCard from '../components/ListingCard.vue'
+import { apiJson, mapHomeRow } from '../api.js'
+
+export default {
+  name: 'HomeView',
+  components: { ListingCard },
+  data() {
+    return { listings: [] }
+  },
+  async mounted() {
+    try {
+      const data = await apiJson('/api/items/home')
+      this.listings = (data.items || []).map(mapHomeRow)
+    } catch {
+      this.listings = []
+    }
+  }
+}
 </script>
 
 <style scoped>
@@ -67,6 +104,22 @@ h1 { font-size: 64px; line-height: 1.05; color: #111827; margin-bottom: 20px; }
 }
 
 .hero-actions { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+
+.featured { padding: 48px 0 24px; background: #f8faff; }
+
+.featured-title { font-size: 32px; color: #111827; text-align: center; margin-bottom: 8px; }
+
+.featured-sub { text-align: center; color: #6b7280; margin-bottom: 28px; }
+
+.listings-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 20px;
+}
+
+.card-link { text-decoration: none; display: block; }
+
+.featured-cta { text-align: center; margin-top: 32px; }
 
 .features { padding: 60px 0 80px; background: white; }
 

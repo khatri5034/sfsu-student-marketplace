@@ -26,15 +26,21 @@
             Join the marketplace to start buying and selling with SFSU students.
           </p>
 
-          <form @submit.prevent="handleRegister" class="form">
+          <form novalidate class="form" @submit.prevent="handleRegister">
             <div class="field">
               <label>Full Name</label>
-              <input v-model="name" placeholder="Enter your full name" />
+              <input v-model="name" name="name" autocomplete="name" placeholder="Enter your full name" />
             </div>
 
             <div class="field">
               <label>Email</label>
-              <input v-model="email" type="email" placeholder="yourname@sfsu.edu" />
+              <input
+                v-model="email"
+                type="email"
+                name="email"
+                autocomplete="username"
+                placeholder="yourname@sfsu.edu"
+              />
             </div>
 
             <div class="field">
@@ -43,6 +49,8 @@
                 <input
                   v-model="password"
                   :type="showPassword ? 'text' : 'password'"
+                  name="password"
+                  autocomplete="new-password"
                   placeholder="Create a password"
                 />
                 <button type="button" class="toggle-btn" @click="showPassword = !showPassword">
@@ -56,13 +64,15 @@
               <input
                 v-model="confirmPassword"
                 :type="showPassword ? 'text' : 'password'"
+                name="confirm-password"
+                autocomplete="new-password"
                 placeholder="Re-enter your password"
               />
             </div>
 
             <p v-if="error" class="error">{{ error }}</p>
 
-            <button class="btn" type="submit">Create Account</button>
+            <button class="btn" type="submit" :disabled="loading">{{ loading ? '…' : 'Create Account' }}</button>
           </form>
 
           <p class="switch">
@@ -76,6 +86,8 @@
 </template>
 
 <script>
+import { apiJson } from '../api.js'
+
 export default {
   data() {
     return {
@@ -84,11 +96,12 @@ export default {
       password: '',
       confirmPassword: '',
       showPassword: false,
-      error: ''
+      error: '',
+      loading: false
     }
   },
   methods: {
-    handleRegister() {
+    async handleRegister() {
       const pattern = /^[^\s@]+@sfsu\.edu$/i
 
       if (!this.name || !this.email || !this.password || !this.confirmPassword) {
@@ -101,19 +114,39 @@ export default {
         return
       }
 
-      if (this.password.length < 6) {
-        this.error = 'Password must be at least 6 characters.'
-        return
-      }
-
       if (this.password !== this.confirmPassword) {
         this.error = 'Passwords do not match.'
         return
       }
 
       this.error = ''
-      localStorage.setItem('gf_user', JSON.stringify({ name: this.name, email: this.email }))
-      this.$router.push('/dashboard')
+      this.loading = true
+      try {
+        const u = await apiJson('/api/auth/register', {
+          method: 'POST',
+          body: JSON.stringify({
+            fullName: this.name.trim(),
+            email: this.email.trim().toLowerCase(),
+            password: this.password
+          })
+        })
+        const displayName = `${u.first_name || ''} ${u.last_name || ''}`.trim() || this.name
+        localStorage.setItem(
+          'gf_user',
+          JSON.stringify({
+            id: u.id,
+            email: u.school_email,
+            first_name: u.first_name,
+            last_name: u.last_name,
+            name: displayName
+          })
+        )
+        this.$router.push('/dashboard')
+      } catch (e) {
+        this.error = e.message || 'Registration failed.'
+      } finally {
+        this.loading = false
+      }
     }
   }
 }
@@ -309,6 +342,8 @@ input:focus {
   font-weight: 700;
   cursor: pointer;
 }
+
+.btn:disabled { opacity: 0.6; cursor: not-allowed; }
 
 .error {
   color: #dc2626;
