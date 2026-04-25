@@ -9,6 +9,8 @@
         <router-link to="/create-listing" class="btn-primary">+ Post a Listing</router-link>
       </div>
 
+      <p v-if="loadError" class="load-error">{{ loadError }}</p>
+
       <div class="stats-row">
         <div class="stat-card">
           <span class="stat-number">{{ myListings.length }}</span>
@@ -34,7 +36,9 @@
           <router-link to="/search" class="view-all">View all listings</router-link>
         </div>
 
-        <div v-if="myListings.length" class="my-listings">
+        <div v-if="loading" class="empty-state"><p>Loading…</p></div>
+
+        <div v-else-if="myListings.length" class="my-listings">
           <div v-for="listing in myListings" :key="listing.id" class="listing-row">
             <div class="listing-row-image">
               <span v-if="!listing.image">📦</span>
@@ -82,14 +86,14 @@
           <router-link
             v-for="conv in conversations"
             :key="conv.id"
-            to="/messages"
+            :to="'/messages?conversation=' + conv.id"
             class="message-preview"
           >
-            <div class="preview-avatar">{{ conv.otherPartyName[0] }}</div>
+            <div class="preview-avatar">{{ (conv.partner_name || '?')[0] }}</div>
             <div class="preview-body">
-              <p class="preview-name">{{ conv.otherPartyName }}</p>
-              <p class="preview-listing">Re: {{ conv.listingTitle }}</p>
-              <p class="preview-last">{{ conv.messages[conv.messages.length - 1].body }}</p>
+              <p class="preview-name">{{ conv.partner_name }}</p>
+              <p class="preview-listing">Re: {{ conv.item_title }}</p>
+              <p class="preview-last">{{ conv.last_message_preview || '' }}</p>
             </div>
           </router-link>
         </div>
@@ -104,30 +108,61 @@
 </template>
 
 <script>
-import { listings, conversations } from '../data/mockData.js'
+import { apiJson, getStoredUser, mapSellerDashboardRow } from '../api.js'
 
 export default {
   name: 'DashboardView',
   data() {
-    const user = JSON.parse(localStorage.getItem('gf_user') || '{}')
     return {
-      userEmail: user.email || 'jwestover@sfsu.edu',
-      userName: user.name || 'Gator',
-      listings,
-      conversations,
-      deleteConfirm: null
+      user: getStoredUser(),
+      myListings: [],
+      conversations: [],
+      deleteConfirm: null,
+      loading: true,
+      loadError: ''
     }
   },
   computed: {
-    myListings() {
-      return this.listings.filter(l => l.sellerEmail === this.userEmail)
+    userName() {
+      return this.user?.name || this.user?.email || 'Gator'
+    },
+    userId() {
+      return this.user?.id
     }
   },
+  async mounted() {
+    if (!this.userId) {
+      this.$router.push('/login')
+      return
+    }
+    await this.refresh()
+  },
   methods: {
-    deleteListing(id) {
-      const idx = this.listings.findIndex(l => l.id === id)
-      if (idx !== -1) this.listings.splice(idx, 1)
-      this.deleteConfirm = null
+    async refresh() {
+      this.loading = true
+      this.loadError = ''
+      try {
+        const [itemsRes, convRes] = await Promise.all([
+          apiJson(`/api/items/by-seller/${this.userId}`),
+          apiJson(`/api/messages/conversations?user_id=${this.userId}`)
+        ])
+        this.myListings = (itemsRes.items || []).map(mapSellerDashboardRow)
+        this.conversations = convRes.conversations || []
+      } catch (e) {
+        this.loadError = e.message || 'Failed to load dashboard.'
+      } finally {
+        this.loading = false
+      }
+    },
+    async deleteListing(id) {
+      try {
+        await apiJson(`/api/items/${id}?seller_id=${this.userId}`, { method: 'DELETE' })
+        this.myListings = this.myListings.filter(l => l.id !== id)
+        this.deleteConfirm = null
+      } catch (e) {
+        this.loadError = e.message || 'Delete failed.'
+        this.deleteConfirm = null
+      }
     }
   }
 }
@@ -135,6 +170,8 @@ export default {
 
 <style scoped>
 .dashboard { padding: 40px 0 80px; background: #f8faff; }
+
+.load-error { color: #dc2626; margin-bottom: 16px; }
 
 .dashboard-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 36px; }
 

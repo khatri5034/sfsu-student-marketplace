@@ -36,7 +36,7 @@ services:
     restart: unless-stopped
     environment:
       MEILI_MASTER_KEY: ${MEILI_MASTER_KEY}
-      MEILI_ENV: ${MEILI_ENV:-development}
+      MEILI_ENV: ${MEILI_ENV:-production}
       MEILI_DB_PATH: /meili_data
     volumes:
       - meili_data:/meili_data

@@ -23,7 +23,7 @@ body {
 .site-header {
   background: linear-gradient(to right, #2563eb, #3b82f6);
   color: white;
-  padding: 16px 0;
+  padding: 16px 24px;
 }
 
 .site-header-inner {
@@ -33,20 +33,29 @@ body {
 .brand {
   text-decoration: none;
   color: white;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
 }
 
 .header-with-auth {
-  position: relative;
   min-height: 44px;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
+}
+
+.header-left,
+.header-right {
+  flex: 1;
+}
+
+.header-right {
+  text-align: right;
 }
 
 .auth-nav-link {
-  position: absolute;
-  left: 0;
-  top: 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -78,7 +87,11 @@ body {
 .about {
   text-decoration: none;
   color: white;
-  text-align: right;
+  font-weight: 500;
+}
+
+.about:hover {
+  text-decoration: underline;
 }
 
 /* Page layout */

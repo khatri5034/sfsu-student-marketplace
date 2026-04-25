@@ -2,23 +2,26 @@
   <div class="messaging">
     <div class="container">
       <h1>Messages</h1>
+      <p v-if="error" class="err">{{ error }}</p>
       <div class="messaging-layout">
         <aside class="conversations">
           <div class="conversations-header"><h3>Conversations</h3></div>
 
-          <div v-if="conversations.length" class="conv-list">
+          <div v-if="loading" class="empty-conversations"><p>Loading…</p></div>
+
+          <div v-else-if="conversations.length" class="conv-list">
             <button
               v-for="conv in conversations"
               :key="conv.id"
               class="conv-item"
-              :class="{ 'conv-item--active': activeId === conv.id }"
-              @click="activeId = conv.id"
+              :class="{ 'conv-item--active': Number(activeId) === Number(conv.id) }"
+              @click="selectConv(Number(conv.id))"
             >
-              <div class="conv-avatar">{{ conv.otherPartyName[0] }}</div>
+              <div class="conv-avatar">{{ (conv.partner_name || '?')[0] }}</div>
               <div class="conv-info">
-                <p class="conv-name">{{ conv.otherPartyName }}</p>
-                <p class="conv-listing">{{ conv.listingTitle }}</p>
-                <p class="conv-last">{{ lastMessage(conv) }}</p>
+                <p class="conv-name">{{ conv.partner_name }}</p>
+                <p class="conv-listing">{{ conv.item_title }}</p>
+                <p class="conv-last">{{ conv.last_message_preview || '' }}</p>
               </div>
             </button>
           </div>
@@ -29,20 +32,24 @@
         </aside>
 
         <main class="thread">
-          <template v-if="activeConversation">
+          <template v-if="activeConversationMeta && threadLoaded">
             <div class="thread-header">
-              <div class="thread-avatar">{{ activeConversation.otherPartyName[0] }}</div>
+              <div class="thread-avatar">{{ (activeConversationMeta.partner_name || '?')[0] }}</div>
               <div>
-                <p class="thread-name">{{ activeConversation.otherPartyName }}</p>
-                <router-link :to="'/listing/' + activeConversation.listingId" class="thread-listing">
-                  Re: {{ activeConversation.listingTitle }}
+                <p class="thread-name">{{ activeConversationMeta.partner_name }}</p>
+                <router-link
+                  v-if="activeConversationMeta.item_id"
+                  :to="'/listing/' + activeConversationMeta.item_id"
+                  class="thread-listing"
+                >
+                  Re: {{ activeConversationMeta.item_title }}
                 </router-link>
               </div>
             </div>
 
             <div class="messages-area" ref="messagesArea">
               <div
-                v-for="msg in activeConversation.messages"
+                v-for="msg in threadMessages"
                 :key="msg.id"
                 class="message-bubble"
                 :class="msg.sender === 'me' ? 'bubble--me' : 'bubble--them'"
@@ -59,11 +66,11 @@
                 placeholder="Type a message..."
                 @keyup.enter="sendReply"
               />
-              <button class="btn-primary" @click="sendReply" :disabled="!replyText.trim()">Send</button>
+              <button class="btn-primary" @click="sendReply" :disabled="!replyText.trim() || sendBusy">Send</button>
             </div>
           </template>
 
-          <div v-else class="empty-thread">
+          <div v-else-if="!loading" class="empty-thread">
             <p>💬 Select a conversation to start messaging.</p>
           </div>
         </main>
@@ -73,47 +80,130 @@
 </template>
 
 <script>
-import { conversations } from '../data/mockData.js'
+import { apiJson, getStoredUser } from '../api.js'
 
 export default {
   name: 'MessagingView',
   data() {
     return {
-      conversations,
-      activeId: conversations.length ? conversations[0].id : null,
-      replyText: ''
+      conversations: [],
+      activeId: null,
+      replyText: '',
+      threadMessages: [],
+      threadLoaded: false,
+      loading: true,
+      sendBusy: false,
+      error: ''
     }
   },
   computed: {
-    activeConversation() {
-      return this.conversations.find(c => c.id === this.activeId) || null
+    activeConversationMeta() {
+      const aid = Number(this.activeId)
+      return this.conversations.find(c => Number(c.id) === aid) || null
     }
   },
-  mounted() {
-    const listingId = this.$route.query.listing
-    if (listingId) {
-      const match = this.conversations.find(c => c.listingId === parseInt(listingId))
-      if (match) this.activeId = match.id
+  async mounted() {
+    const user = getStoredUser()
+    if (!user?.id) {
+      this.$router.push('/login')
+      return
+    }
+    await this.loadConversations()
+
+    const qConv = this.$route.query.conversation
+    const qListing = this.$route.query.listing
+
+    if (qListing) {
+      try {
+        const data = await apiJson('/api/conversations', {
+          method: 'POST',
+          body: JSON.stringify({
+            buyer_id: user.id,
+            item_id: Number.parseInt(qListing, 10)
+          })
+        })
+        await this.loadConversations()
+        this.activeId = data.conversation_id
+        this.$router.replace({ query: { conversation: String(data.conversation_id) } })
+        await this.loadThread(this.activeId)
+      } catch (e) {
+        this.error = e.message || 'Could not open conversation.'
+      }
+    } else if (qConv) {
+      this.activeId = Number.parseInt(qConv, 10)
+      if (Number.isInteger(this.activeId)) await this.loadThread(this.activeId)
+    } else if (this.conversations.length) {
+      this.activeId = this.conversations[0].id
+      await this.loadThread(this.activeId)
     }
   },
   methods: {
-    lastMessage(conv) {
-      const last = conv.messages[conv.messages.length - 1]
-      return last ? last.body : ''
+    async loadConversations() {
+      const user = getStoredUser()
+      this.loading = true
+      this.error = ''
+      try {
+        const data = await apiJson(`/api/messages/conversations?user_id=${user.id}`)
+        this.conversations = data.conversations || []
+      } catch (e) {
+        this.error = e.message || 'Failed to load conversations.'
+      } finally {
+        this.loading = false
+      }
     },
-    sendReply() {
-      if (!this.replyText.trim() || !this.activeConversation) return
-      this.activeConversation.messages.push({
-        id: Date.now(),
-        sender: 'me',
-        body: this.replyText.trim(),
-        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-      })
-      this.replyText = ''
-      this.$nextTick(() => {
-        const area = this.$refs.messagesArea
-        if (area) area.scrollTop = area.scrollHeight
-      })
+    mapThreadMessages(rows, currentUserId) {
+      return (rows || []).map(m => ({
+        id: m.id,
+        sender: m.sender_id === currentUserId ? 'me' : 'them',
+        body: m.body,
+        time: m.created_at
+          ? new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          : ''
+      }))
+    },
+    async loadThread(conversationId) {
+      const user = getStoredUser()
+      if (!user?.id || !conversationId) return
+      this.threadLoaded = false
+      try {
+        const data = await apiJson(
+          `/api/messages/conversations/${conversationId}?user_id=${user.id}`
+        )
+        this.threadMessages = this.mapThreadMessages(data.messages, user.id)
+        this.threadLoaded = true
+        this.$nextTick(() => this.scrollThread())
+      } catch (e) {
+        this.error = e.message || 'Failed to load messages.'
+        this.threadMessages = []
+        this.threadLoaded = true
+      }
+    },
+    scrollThread() {
+      const area = this.$refs.messagesArea
+      if (area) area.scrollTop = area.scrollHeight
+    },
+    async selectConv(id) {
+      this.activeId = id
+      await this.loadThread(id)
+    },
+    async sendReply() {
+      const text = this.replyText.trim()
+      const user = getStoredUser()
+      if (!text || !this.activeId || !user?.id) return
+      this.sendBusy = true
+      try {
+        await apiJson(`/api/messages/conversations/${this.activeId}/messages`, {
+          method: 'POST',
+          body: JSON.stringify({ user_id: user.id, body: text })
+        })
+        this.replyText = ''
+        await this.loadThread(this.activeId)
+        await this.loadConversations()
+      } catch (e) {
+        this.error = e.message || 'Send failed.'
+      } finally {
+        this.sendBusy = false
+      }
     }
   }
 }
@@ -121,6 +211,8 @@ export default {
 
 <style scoped>
 .messaging { padding: 40px 0 80px; background: #f8faff; }
+
+.err { color: #dc2626; margin-bottom: 12px; }
 
 h1 { font-size: 40px; color: #111827; margin-bottom: 28px; }
 

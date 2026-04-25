@@ -14,7 +14,7 @@ function applyAuthNavState() {
   }
 
   authNavLink.href = '/login';
-  authNavLink.textContent = 'Log in';
+  authNavLink.textContent = 'Log In';
   authNavLink.setAttribute('aria-label', 'Open login page');
 }
 

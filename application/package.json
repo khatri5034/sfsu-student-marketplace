@@ -4,6 +4,7 @@
   "description": "",
   "main": "src/app.js",
   "scripts": {
+    "build:frontend": "npm install --prefix frontend && npm run build --prefix frontend",
     "start": "node src/app.js",
     "dev": "nodemon src/app.js",
     "sass:build": "sass sass/main.scss src/public/css/style.css --style=compressed --no-source-map",
