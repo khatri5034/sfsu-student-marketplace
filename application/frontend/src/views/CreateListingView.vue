@@ -82,18 +82,31 @@
             </div>
 
             <div class="form-group">
-              <label>Image <span class="optional-note">— optional</span></label>
+              <label>Images <span class="optional-note">— optional, up to 5</span></label>
               <div class="file-upload" @click="$refs.fileInput.click()">
-                <div v-if="imagePreview" class="image-preview">
-                  <img :src="imagePreview" alt="Preview" />
+                <div v-if="imagePreviews.length" class="image-preview-grid">
+                  <div
+                    v-for="(preview, index) in imagePreviews"
+                    :key="`${preview}-${index}`"
+                    class="image-preview"
+                  >
+                    <img :src="preview" :alt="`Preview ${index + 1}`" />
+                  </div>
                 </div>
                 <div v-else class="file-upload-prompt">
                   <span class="upload-icon">📷</span>
-                  <span>Click to upload an image</span>
-                  <span class="file-hint">JPG, PNG up to 5MB</span>
+                  <span>Click to upload images</span>
+                  <span class="file-hint">JPG, PNG up to 5MB each (max 5)</span>
                 </div>
               </div>
-              <input ref="fileInput" type="file" accept="image/*" class="hidden-input" @change="handleImage" />
+              <input
+                ref="fileInput"
+                type="file"
+                accept="image/*"
+                class="hidden-input"
+                multiple
+                @change="handleImage"
+              />
             </div>
 
             <div v-if="error" class="error-msg">{{ error }}</div>
@@ -135,8 +148,8 @@ export default {
         courseId: '',
         pickupLocationId: null
       },
-      imageFile: null,
-      imagePreview: null,
+      imageFiles: [],
+      imagePreviews: [],
       error: '',
       success: false,
       submitting: false
@@ -162,15 +175,22 @@ export default {
     }
   },
   methods: {
-    handleImage(e) {
-      const file = e.target.files[0]
-      if (!file) return
-      this.imageFile = file
-      const reader = new FileReader()
-      reader.onload = ev => {
-        this.imagePreview = ev.target.result
-      }
-      reader.readAsDataURL(file)
+    async handleImage(e) {
+      const selectedFiles = Array.from(e.target.files || [])
+      if (!selectedFiles.length) return
+
+      const limitedFiles = selectedFiles.slice(0, 5)
+      this.imageFiles = limitedFiles
+      this.imagePreviews = await Promise.all(
+        limitedFiles.map(
+          file =>
+            new Promise(resolve => {
+              const reader = new FileReader()
+              reader.onload = ev => resolve(ev.target?.result || '')
+              reader.readAsDataURL(file)
+            })
+        )
+      )
     },
     async submitListing() {
       const user = getStoredUser()
@@ -200,9 +220,11 @@ export default {
           body: JSON.stringify(body)
         })
 
-        if (this.imageFile) {
+        if (this.imageFiles.length) {
           const fd = new FormData()
-          fd.append('images', this.imageFile)
+          for (const file of this.imageFiles) {
+            fd.append('images', file)
+          }
           const r = await fetch(`/api/items/${created.id}/images`, {
             method: 'POST',
             body: fd
@@ -292,12 +314,17 @@ export default {
   font-size: 15px;
   font-family: Arial, sans-serif;
   background: white;
+  color: #111827;
+  color-scheme: light;
   transition: border-color 0.2s;
 }
 
 .form-group input:focus,
 .form-group select:focus,
 .form-group textarea:focus { outline: none; border-color: #4f46e5; }
+
+.form-group input::placeholder,
+.form-group textarea::placeholder { color: #6b7280; opacity: 1; }
 
 .form-group input:disabled { background: #f3f4f6; color: #9ca3af; cursor: not-allowed; }
 
@@ -322,9 +349,20 @@ export default {
 
 .file-hint { font-size: 12px; }
 
-.image-preview { height: 160px; }
+.image-preview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: 10px;
+}
 
-.image-preview img { height: 100%; max-width: 100%; object-fit: contain; border-radius: 8px; }
+.image-preview {
+  height: 110px;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #f9fafb;
+}
+
+.image-preview img { width: 100%; height: 100%; object-fit: cover; }
 
 .hidden-input { display: none; }
 
