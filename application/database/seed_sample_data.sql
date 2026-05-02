@@ -1,7 +1,7 @@
 -- Database is selected by the mysql client (see seed-sample-data.sh / DB_NAME in .env)
 -- This seed intentionally resets all app data and inserts:
 -- - 2 users (test1, test2)
--- - 2 items per user
+-- - sample item rows are approval_status = approved (visible on home/search)
 -- - listing images from /uploads/TESTING
 -- - one conversation thread with sample messages
 
@@ -65,13 +65,14 @@ INSERT INTO items (
   listing_type,
   pickup_location_id,
   status,
+  approval_status,
   is_featured
 )
 VALUES
-  (@user1_id, 'Game Boy Advance', 'Handheld console in good condition.', 65.00, @cat_electronics, @course_csc415, 'sale', NULL, 'active', FALSE),
-  (@user1_id, 'iPhone 11', 'Unlocked iPhone with charger included.', 240.00, @cat_electronics, @course_csc648, 'sale', NULL, 'active', FALSE),
-  (@user2_id, 'Math Textbook', 'Used calculus textbook with notes.', 30.00, @cat_textbooks, @course_csc648, 'sale', NULL, 'active', FALSE),
-  (@user2_id, 'Monkey Plush Toy', 'Soft toy in excellent condition.', 18.00, @cat_other, @course_csc415, 'sale', NULL, 'active', FALSE);
+  (@user1_id, 'Game Boy Advance', 'Handheld console in good condition.', 65.00, @cat_electronics, @course_csc415, 'sale', NULL, 'active', 'approved', FALSE),
+  (@user1_id, 'iPhone 11', 'Unlocked iPhone with charger included.', 240.00, @cat_electronics, @course_csc648, 'sale', NULL, 'active', 'approved', FALSE),
+  (@user2_id, 'Math Textbook', 'Used calculus textbook with notes.', 30.00, @cat_textbooks, @course_csc648, 'sale', NULL, 'active', 'approved', FALSE),
+  (@user2_id, 'Monkey Plush Toy', 'Soft toy in excellent condition.', 18.00, @cat_other, @course_csc415, 'sale', NULL, 'active', 'approved', FALSE);
 
 SET @item_gameboy = (SELECT id FROM items WHERE seller_id = @user1_id AND title = 'Game Boy Advance' LIMIT 1);
 SET @item_iphone = (SELECT id FROM items WHERE seller_id = @user1_id AND title = 'iPhone 11' LIMIT 1);

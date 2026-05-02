@@ -23,6 +23,7 @@ async function rowToMeiliDoc(itemId) {
        i.seller_id,
        i.pickup_location_id,
        i.status,
+       i.approval_status,
        i.is_featured,
        i.created_at
      FROM items i

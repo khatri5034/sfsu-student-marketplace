@@ -16,6 +16,11 @@ set -a
 . "$ENV_FILE"
 set +a
 
+echo "Ensuring items.approval_status exists (idempotent migration)..."
+docker compose --env-file "$ENV_FILE" -f "$APP_DIR/docker-compose.yml" exec -T mysql \
+  env MYSQL_PWD="$DB_PASSWORD" mysql -u"$DB_USER" "$DB_NAME" \
+  < "$APP_DIR/database/migrations/001_add_item_approval_status.sql"
+
 echo "Seeding sample users and items into MySQL (database: ${DB_NAME})..."
 # MYSQL_PWD avoids -p on the CLI; credentials must match MySQL as created from this .env
 docker compose --env-file "$ENV_FILE" -f "$APP_DIR/docker-compose.yml" exec -T mysql \

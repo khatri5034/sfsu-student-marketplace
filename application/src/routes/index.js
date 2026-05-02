@@ -285,7 +285,11 @@ router.post('/api/conversations', async (req, res) => {
 
   try {
     const [items] = await db.query(
-      `SELECT seller_id FROM items WHERE id = ? AND status = 'active' LIMIT 1`,
+      `SELECT seller_id FROM items
+       WHERE id = ?
+         AND status = 'active'
+         AND approval_status = 'approved'
+       LIMIT 1`,
       [itemId]
     );
 
@@ -383,6 +387,7 @@ router.get('/api/items/home', async (req, res) => {
        LEFT JOIN categories cat ON cat.id = i.category_id
        LEFT JOIN courses c ON c.id = i.course_id
        WHERE i.status = 'active'
+         AND i.approval_status = 'approved'
        ORDER BY i.created_at DESC, i.id DESC
        LIMIT 10`
     );
@@ -410,6 +415,7 @@ router.get('/api/items/by-seller/:sellerId', async (req, res) => {
          i.price,
          i.listing_type,
          i.status,
+         i.approval_status,
          cat.name AS category_name,
          (
            SELECT li.image_url
@@ -440,7 +446,7 @@ router.get('/api/items/search', async (req, res) => {
   try {
     const index = meili.index('items');
 
-    const filters = ['status = active'];
+    const filters = ["status = active", "approval_status = approved"];
 
     if (categoryId) {
       filters.push(`category_id = ${Number(categoryId)}`);
@@ -542,6 +548,13 @@ router.get('/api/items/:id', async (req, res) => {
     return res.status(400).json({ error: 'Invalid item id' });
   }
 
+  const viewerRaw = req.query.viewer_id;
+  const viewerId =
+    viewerRaw !== undefined && viewerRaw !== null && viewerRaw !== ''
+      ? Number.parseInt(viewerRaw, 10)
+      : null;
+  const viewerOk = Number.isInteger(viewerId) && viewerId > 0;
+
   try {
     const [rows] = await db.query(
       `SELECT
@@ -555,6 +568,7 @@ router.get('/api/items/:id', async (req, res) => {
          i.listing_type,
          i.pickup_location_id,
          i.status,
+         i.approval_status,
          i.created_at,
          cat.name AS category_name,
          c.course_code,
@@ -574,6 +588,12 @@ router.get('/api/items/:id', async (req, res) => {
       return res.status(404).json({ error: 'Not found' });
     }
 
+    const row = rows[0];
+    const isOwner = viewerOk && row.seller_id === viewerId;
+    if (row.approval_status !== 'approved' && !isOwner) {
+      return res.status(404).json({ error: 'Not found' });
+    }
+
     const [imageRows] = await db.query(
       `SELECT image_url
        FROM listing_images
@@ -583,7 +603,7 @@ router.get('/api/items/:id', async (req, res) => {
     );
 
     res.json({
-      item: rows[0],
+      item: row,
       images: imageRows.map(r => r.image_url),
     });
   } catch (err) {
