@@ -52,6 +52,10 @@
                   {{ listing.listingType === 'trade' ? 'Trade Only' : '$' + listing.price }}
                 </span>
                 <span class="meta-badge meta-badge--cat">{{ listing.category }}</span>
+                <span
+                  v-if="listing.approvalStatus && listing.approvalStatus !== 'approved'"
+                  class="meta-badge meta-badge--approval"
+                >{{ listing.approvalStatus === 'pending' ? 'Pending approval' : 'Rejected' }}</span>
               </div>
             </div>
             <div class="listing-row-actions">
@@ -241,6 +245,8 @@ h2 { font-size: 24px; color: #111827; }
 .meta-badge--price { background: #d1fae5; color: #065f46; }
 
 .meta-badge--cat { background: #fef3c7; color: #92400e; text-transform: capitalize; }
+
+.meta-badge--approval { background: #fed7aa; color: #9a3412; text-transform: none; }
 
 .listing-row-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
 
