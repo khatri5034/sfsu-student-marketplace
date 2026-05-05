@@ -10,11 +10,6 @@ if (loginForm) {
     const password = passwordInput ? passwordInput.value : '';
 
     if (authError) authError.textContent = '';
-    
-    if (!email.endsWith('@sfsu.edu')) {
-      if (authError) authError.textContent = 'Please use your SFSU email (@sfsu.edu)';
-      return;
-    }
 
     try {
       const response = await fetch('/api/auth/login', {
