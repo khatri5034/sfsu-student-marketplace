@@ -59,6 +59,7 @@ CREATE TABLE items (
     listing_type ENUM('sale', 'trade', 'sale_or_trade') NOT NULL DEFAULT 'sale',
     pickup_location_id INT NULL,
     status ENUM('active', 'sold', 'removed') NOT NULL DEFAULT 'active',
+    approval_status ENUM('pending', 'approved', 'rejected') NOT NULL DEFAULT 'pending',
     is_featured BOOLEAN NOT NULL DEFAULT FALSE,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -180,6 +181,7 @@ CREATE TABLE reports (
 
 -- Items: common listing queries
 CREATE INDEX idx_items_seller_id ON items(seller_id);
+CREATE INDEX idx_items_approval_status ON items(approval_status);
 CREATE INDEX idx_items_status_category_created ON items(status, category_id, created_at);
 CREATE INDEX idx_items_listing_type ON items(listing_type);
 CREATE INDEX idx_items_pickup_location_id ON items(pickup_location_id);

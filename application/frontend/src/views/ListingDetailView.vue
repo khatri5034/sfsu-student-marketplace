@@ -7,6 +7,9 @@
       <p v-if="loading" class="loading">Loading…</p>
 
       <div v-if="listing && !loading" class="detail-layout">
+        <p v-if="listing.approvalStatus && listing.approvalStatus !== 'approved'" class="approval-banner">
+          This listing is {{ approvalStatusLabel }}. Only you can see it until it is approved.
+        </p>
         <div class="image-section">
           <div class="main-image">
             <img v-if="listing.image" :src="listing.image" :alt="listing.title" />
@@ -56,9 +59,13 @@
             <router-link to="/login" class="btn-primary">Log in to Message</router-link>
           </div>
           <div v-else class="actions">
-            <button class="btn-primary" :disabled="msgBusy" @click="messageSeller">{{ msgBusy ? '…' : '💬 Message Seller' }}</button>
             <button
-              v-if="listing.listingType !== 'sale'"
+              class="btn-primary"
+              :disabled="msgBusy || !listing.publicApproved"
+              @click="messageSeller"
+            >{{ msgBusy ? '…' : '💬 Message Seller' }}</button>
+            <button
+              v-if="listing.listingType !== 'sale' && listing.publicApproved"
               class="btn-secondary"
               @click="showTradeModal = true"
             >🔄 Offer Trade</button>
@@ -111,6 +118,12 @@ export default {
     typeClass() {
       const map = { sale: 'badge--sale', trade: 'badge--trade', both: 'badge--both' }
       return map[this.listing?.listingType] || ''
+    },
+    approvalStatusLabel() {
+      const s = this.listing?.approvalStatus
+      if (s === 'pending') return 'pending approval'
+      if (s === 'rejected') return 'not approved'
+      return ''
     }
   },
   watch: {
@@ -133,9 +146,11 @@ export default {
         return
       }
       try {
+        const user = getStoredUser()
+        const viewerQs = user?.id ? `?viewer_id=${encodeURIComponent(user.id)}` : ''
         const [meta, detail] = await Promise.all([
           apiJson('/api/meta/pickup-locations'),
-          apiJson(`/api/items/${id}`)
+          apiJson(`/api/items/${id}${viewerQs}`)
         ])
         this.pickupLocations = meta.pickup_locations || []
         this.listing = mapDetailToListing(detail.item, detail.images)
@@ -188,6 +203,18 @@ export default {
   grid-template-columns: 1fr 1fr;
   gap: 48px;
   align-items: start;
+}
+
+.approval-banner {
+  grid-column: 1 / -1;
+  background: #fef3c7;
+  color: #92400e;
+  padding: 14px 18px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0;
+  border: 1px solid #fcd34d;
 }
 
 .image-section { position: sticky; top: 100px; }

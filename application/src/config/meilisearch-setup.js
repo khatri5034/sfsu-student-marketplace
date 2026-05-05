@@ -11,6 +11,7 @@ async function setupMeilisearchIndexes() {
         'category_id',
         'course_id',
         'status',
+        'approval_status',
         'listing_type',
         'seller_id',
         'pickup_location_id',
@@ -30,6 +31,7 @@ async function setupMeilisearchIndexes() {
         'seller_id',
         'pickup_location_id',
         'status',
+        'approval_status',
         'is_featured',
         'created_at',
       ],
@@ -58,6 +60,7 @@ async function setupMeilisearchIndexes() {
           i.seller_id,
           i.pickup_location_id,
           i.status,
+          i.approval_status,
           i.is_featured,
           i.created_at
         FROM items i

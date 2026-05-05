@@ -80,11 +80,13 @@ export function mapSellerDashboardRow(row) {
     condition: '—',
     image: row.image_url || null,
     status: row.status,
+    approvalStatus: row.approval_status || 'pending',
   }
 }
 
 export function mapDetailToListing(item, imageUrls) {
   const name = item.category_name || 'Other'
+  const approvalStatus = item.approval_status || 'approved'
   return {
     id: item.id,
     seller_id: item.seller_id,
@@ -102,5 +104,7 @@ export function mapDetailToListing(item, imageUrls) {
     sellerName: item.seller_name,
     sellerEmail: item.seller_email,
     createdAt: item.created_at,
+    approvalStatus,
+    publicApproved: approvalStatus === 'approved',
   }
 }

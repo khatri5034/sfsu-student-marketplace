@@ -17,7 +17,7 @@
       <div class="create-form-wrap">
         <div class="create-card">
           <div v-if="success" class="success-banner">
-            ✅ Listing posted! Redirecting to your dashboard...
+            ✅ Listing saved. It stays private until approved — redirecting to your dashboard…
           </div>
 
           <h2>New Listing</h2>
