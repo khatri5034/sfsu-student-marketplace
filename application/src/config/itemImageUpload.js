@@ -23,7 +23,32 @@ const storage = multer.diskStorage({
 // Multer middleware
 const itemImageUpload = multer({
   storage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+  fileFilter(req, file, cb) {
+    const ext = path.extname(file.originalname || '').toLowerCase();
+
+    const allowedMimeTypes = [
+      'image/jpeg',
+      'image/png',
+      'image/gif'
+    ];
+
+    const allowedExtensions = [
+      '.jpg',
+      '.jpeg',
+      '.png',
+      '.gif'
+    ];
+
+    if (
+      allowedMimeTypes.includes(file.mimetype) &&
+      allowedExtensions.includes(ext)
+    ) {
+      return cb(null, true);
+    }
+
+    cb(new Error('Invalid image type. Only JPEG, PNG, and GIF are allowed.'));
+  },
+  limits: { fileSize: 5 * 1024 * 1024 } // 5MB
 });
 
 module.exports = itemImageUpload;

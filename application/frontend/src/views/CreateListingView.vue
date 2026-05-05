@@ -90,6 +90,12 @@
                     :key="`${preview}-${index}`"
                     class="image-preview"
                   >
+                    <button
+                      type="button"
+                      class="remove-image-btn"
+                      aria-label="Remove image"
+                      @click.stop.prevent="removeImage(index)"
+                    />
                     <img :src="preview" :alt="`Preview ${index + 1}`" />
                   </div>
                 </div>
@@ -192,6 +198,11 @@ export default {
         )
       )
     },
+    removeImage(index) {
+      if (!Number.isInteger(index) || index < 0 || index >= this.imageFiles.length) return
+      this.imageFiles.splice(index, 1)
+      this.imagePreviews.splice(index, 1)
+    },
     async submitListing() {
       const user = getStoredUser()
       if (!user?.id) {
@@ -215,10 +226,16 @@ export default {
           body.price = this.form.price === '' ? 0 : Number(this.form.price)
         }
 
-        const created = await apiJson('/api/items', {
-          method: 'POST',
-          body: JSON.stringify(body)
-        })
+        let created
+        try {
+          created = await apiJson('/api/items', {
+            method: 'POST',
+            body: JSON.stringify(body)
+          })
+        } catch (e) {
+          this.error = e.message || 'Could not create listing.'
+          return
+        }
 
         if (this.imageFiles.length) {
           const fd = new FormData()
@@ -230,22 +247,28 @@ export default {
             body: fd
           })
           if (!r.ok) {
-            const t = await r.text()
-            let msg = t
+            const text = await r.text()
+            let detail = ''
             try {
-              const j = JSON.parse(t)
-              msg = j.error || t
+              const j = JSON.parse(text)
+              const m = j && (j.error ?? j.message)
+              if (typeof m === 'string' && m.trim()) detail = m.trim()
             } catch {
-              /* use text */
+              if (typeof text === 'string' && text.trim()) {
+                detail = text.trim().slice(0, 240)
+              }
             }
-            throw new Error(msg || 'Image upload failed')
+            this.error =
+              detail ||
+              'Invalid image type or upload failed. Use JPEG, PNG, or GIF (max 5MB each).'
+            return
           }
         }
 
         this.success = true
         setTimeout(() => this.$router.push('/dashboard'), 1200)
       } catch (e) {
-        this.error = e.message || 'Could not create listing.'
+        this.error = e.message || 'Something went wrong. Please try again.'
       } finally {
         this.submitting = false
       }
@@ -356,33 +379,57 @@ export default {
 }
 
 .image-preview {
+  position: relative;
   height: 110px;
   border-radius: 10px;
-  overflow: hidden;
+  overflow: visible;
+
   background: #f9fafb;
 }
 
-.image-preview img { width: 100%; height: 100%; object-fit: cover; }
-
-.hidden-input { display: none; }
-
-.success-banner {
-  background: #d1fae5;
-  color: #065f46;
-  border-radius: 12px;
-  padding: 14px 18px;
-  font-weight: 600;
-  margin-bottom: 24px;
-  font-size: 15px;
+.image-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 10px;
 }
 
-.error-msg {
-  background: #fee2e2;
-  color: #991b1b;
-  border-radius: 12px;
-  padding: 12px 16px;
-  font-size: 14px;
-  margin-bottom: 16px;
+.remove-image-btn {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+
+  width: 24px;
+  height: 24px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: none;
+  border-radius: 50%;
+  background: #dc2626;
+
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  padding: 0;
+}
+
+.remove-image-btn::before,
+.remove-image-btn::after {
+  content: "";
+  position: absolute;
+  width: 12px;
+  height: 2px;
+  background: white;
+}
+
+.remove-image-btn::before {
+  transform: rotate(45deg);
+}
+
+.remove-image-btn::after {
+  transform: rotate(-45deg);
 }
 
 .form-actions { display: flex; gap: 14px; justify-content: flex-end; margin-top: 8px; }

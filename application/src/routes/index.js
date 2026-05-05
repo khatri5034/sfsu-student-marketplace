@@ -629,43 +629,50 @@ router.get('/health', async (req, res) => {
 });
 
 // Upload multiple images for a marketplace item.
-router.post('/api/items/:id/images', itemImageUpload.array('images', 5), async (req, res) => {
-  const itemId = Number.parseInt(req.params.id, 10);
-
-  if (!Number.isInteger(itemId) || itemId <= 0) {
-    return res.status(400).json({ success: false, error: 'Invalid item id' });
-  }
-
-  if (!req.files || req.files.length === 0) {
-    return res.status(400).json({ success: false, error: 'At least one image is required' });
-  }
-
-  try {
-    const imageRecords = req.files.map((file, index) => [
-      itemId,
-      `/uploads/${file.filename}`,
-      index
-    ]);
-
-    await db.query(
-      `INSERT INTO listing_images (item_id, image_url, sort_order)
-       VALUES ?`,
-      [imageRecords]
-    );
-
-    await upsertMeiliItem(itemId);
-
-    res.status(201).json({
-      success: true,
-      imageUrls: req.files.map(file => `/uploads/${file.filename}`)
-    });
-  } catch (err) {
-    if (err && (err.code === 'ER_NO_REFERENCED_ROW_2' || err.errno === 1452)) {
-      return res.status(404).json({ success: false, error: 'Item not found' });
+router.post('/api/items/:id/images', (req, res) => {
+  itemImageUpload.array('images', 5)(req, res, async (err) => {
+    if (err) {
+      return res.status(400).json({ success: false, error: err.message });
     }
 
-    console.error(err);
-    res.status(500).json({ success: false, error: 'Failed to save images' });
-  }
+    const itemId = Number.parseInt(req.params.id, 10);
+
+    if (!Number.isInteger(itemId) || itemId <= 0) {
+      return res.status(400).json({ success: false, error: 'Invalid item id' });
+    }
+
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({ success: false, error: 'At least one image is required' });
+    }
+
+    try {
+      const imageRecords = req.files.map((file, index) => [
+        itemId,
+        `/uploads/${file.filename}`,
+        index
+      ]);
+
+      await db.query(
+        `INSERT INTO listing_images (item_id, image_url, sort_order)
+         VALUES ?`,
+        [imageRecords]
+      );
+
+      await upsertMeiliItem(itemId);
+
+      res.status(201).json({
+        success: true,
+        imageUrls: req.files.map(file => `/uploads/${file.filename}`)
+      });
+
+    } catch (err) {
+      if (err && (err.code === 'ER_NO_REFERENCED_ROW_2' || err.errno === 1452)) {
+        return res.status(404).json({ success: false, error: 'Item not found' });
+      }
+
+      console.error(err);
+      res.status(500).json({ success: false, error: 'Failed to save images' });
+    }
+  });
 });
 module.exports = router;
