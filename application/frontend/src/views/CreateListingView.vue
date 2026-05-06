@@ -81,8 +81,29 @@
               <MeetupLocationPicker v-model="form.pickupLocationId" :locations="pickupLocations" />
             </div>
 
-            <div class="form-group">
+            <div class="form-group form-group-images">
               <label>Images <span class="optional-note">— optional, up to 5</span></label>
+              <div class="image-picker-head">
+                <button
+                  type="button"
+                  class="btn-browse"
+                  @click.prevent="$refs.fileInput.click()"
+                >
+                  Browse…
+                </button>
+                <span class="image-upload-status" aria-live="polite">{{
+                  imageUploadNote || 'No images selected (optional, max 5).'
+                }}</span>
+              </div>
+              <input
+                ref="fileInput"
+                type="file"
+                accept="image/*"
+                class="hidden-input"
+                tabindex="-1"
+                multiple
+                @change="handleImage"
+              />
               <div class="file-upload" @click="$refs.fileInput.click()">
                 <div v-if="imagePreviews.length" class="image-preview-grid">
                   <div
@@ -90,6 +111,12 @@
                     :key="`${preview}-${index}`"
                     class="image-preview"
                   >
+                    <button
+                      type="button"
+                      class="remove-image-btn"
+                      aria-label="Remove image"
+                      @click.stop.prevent="removeImage(index)"
+                    />
                     <img :src="preview" :alt="`Preview ${index + 1}`" />
                   </div>
                 </div>
@@ -99,14 +126,6 @@
                   <span class="file-hint">JPG, PNG up to 5MB each (max 5)</span>
                 </div>
               </div>
-              <input
-                ref="fileInput"
-                type="file"
-                accept="image/*"
-                class="hidden-input"
-                multiple
-                @change="handleImage"
-              />
             </div>
 
             <div v-if="error" class="error-msg">{{ error }}</div>
@@ -150,6 +169,7 @@ export default {
       },
       imageFiles: [],
       imagePreviews: [],
+      imageUploadNote: '',
       error: '',
       success: false,
       submitting: false
@@ -180,6 +200,8 @@ export default {
       if (!selectedFiles.length) return
 
       const limitedFiles = selectedFiles.slice(0, 5)
+      const attached = limitedFiles.length
+
       this.imageFiles = limitedFiles
       this.imagePreviews = await Promise.all(
         limitedFiles.map(
@@ -191,6 +213,17 @@ export default {
             })
         )
       )
+
+      this.imageUploadNote = `${attached} image${attached === 1 ? '' : 's'} attached.`
+
+      e.target.value = ''
+    },
+    removeImage(index) {
+      if (!Number.isInteger(index) || index < 0 || index >= this.imageFiles.length) return
+      this.imageFiles.splice(index, 1)
+      this.imagePreviews.splice(index, 1)
+      const n = this.imageFiles.length
+      this.imageUploadNote = n ? `${n} image${n === 1 ? '' : 's'} attached.` : ''
     },
     async submitListing() {
       const user = getStoredUser()
@@ -215,10 +248,16 @@ export default {
           body.price = this.form.price === '' ? 0 : Number(this.form.price)
         }
 
-        const created = await apiJson('/api/items', {
-          method: 'POST',
-          body: JSON.stringify(body)
-        })
+        let created
+        try {
+          created = await apiJson('/api/items', {
+            method: 'POST',
+            body: JSON.stringify(body)
+          })
+        } catch (e) {
+          this.error = e.message || 'Could not create listing.'
+          return
+        }
 
         if (this.imageFiles.length) {
           const fd = new FormData()
@@ -230,22 +269,28 @@ export default {
             body: fd
           })
           if (!r.ok) {
-            const t = await r.text()
-            let msg = t
+            const text = await r.text()
+            let detail = ''
             try {
-              const j = JSON.parse(t)
-              msg = j.error || t
+              const j = JSON.parse(text)
+              const m = j && (j.error ?? j.message)
+              if (typeof m === 'string' && m.trim()) detail = m.trim()
             } catch {
-              /* use text */
+              if (typeof text === 'string' && text.trim()) {
+                detail = text.trim().slice(0, 240)
+              }
             }
-            throw new Error(msg || 'Image upload failed')
+            this.error =
+              detail ||
+              'Invalid image type or upload failed. Use JPEG, PNG, or GIF (max 5MB each).'
+            return
           }
         }
 
         this.success = true
         setTimeout(() => this.$router.push('/dashboard'), 1200)
       } catch (e) {
-        this.error = e.message || 'Could not create listing.'
+        this.error = e.message || 'Something went wrong. Please try again.'
       } finally {
         this.submitting = false
       }
@@ -303,6 +348,10 @@ export default {
 
 .form-group label { font-size: 14px; font-weight: 700; color: #374151; }
 
+.form-group-images {
+  position: relative;
+}
+
 .optional-note { font-weight: 400; color: #9ca3af; font-size: 13px; }
 
 .form-group input,
@@ -332,6 +381,55 @@ export default {
 
 .radio-label { display: flex; align-items: center; gap: 6px; font-size: 14px; color: #374151; cursor: pointer; }
 
+/* Hide native file control — browser label (“No file chosen”, wrong counts) is not our source of truth */
+.form-group input.hidden-input[type='file'] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  font-size: 0;
+  line-height: 0;
+}
+
+.image-picker-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+.btn-browse {
+  flex-shrink: 0;
+  padding: 8px 14px;
+  font-size: 14px;
+  font-family: Arial, sans-serif;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  background: white;
+  color: #374151;
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s;
+}
+
+.btn-browse:hover {
+  border-color: #4f46e5;
+  color: #4f46e5;
+}
+
+.image-upload-status {
+  font-size: 13px;
+  color: #4b5563;
+  line-height: 1.45;
+}
+
 .file-upload {
   border: 2px dashed #d1d5db;
   border-radius: 12px;
@@ -356,33 +454,57 @@ export default {
 }
 
 .image-preview {
+  position: relative;
   height: 110px;
   border-radius: 10px;
-  overflow: hidden;
+  overflow: visible;
+
   background: #f9fafb;
 }
 
-.image-preview img { width: 100%; height: 100%; object-fit: cover; }
-
-.hidden-input { display: none; }
-
-.success-banner {
-  background: #d1fae5;
-  color: #065f46;
-  border-radius: 12px;
-  padding: 14px 18px;
-  font-weight: 600;
-  margin-bottom: 24px;
-  font-size: 15px;
+.image-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 10px;
 }
 
-.error-msg {
-  background: #fee2e2;
-  color: #991b1b;
-  border-radius: 12px;
-  padding: 12px 16px;
-  font-size: 14px;
-  margin-bottom: 16px;
+.remove-image-btn {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+
+  width: 24px;
+  height: 24px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: none;
+  border-radius: 50%;
+  background: #dc2626;
+
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  padding: 0;
+}
+
+.remove-image-btn::before,
+.remove-image-btn::after {
+  content: "";
+  position: absolute;
+  width: 12px;
+  height: 2px;
+  background: white;
+}
+
+.remove-image-btn::before {
+  transform: rotate(45deg);
+}
+
+.remove-image-btn::after {
+  transform: rotate(-45deg);
 }
 
 .form-actions { display: flex; gap: 14px; justify-content: flex-end; margin-top: 8px; }

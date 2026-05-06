@@ -12,8 +12,38 @@
         </p>
         <div class="image-section">
           <div class="main-image">
-            <img v-if="listing.image" :src="listing.image" :alt="listing.title" />
+            <img v-if="currentImageSrc" :src="currentImageSrc" :alt="listing.title" />
             <div v-else class="image-placeholder">📦</div>
+            <button
+              v-if="canNavigateImages"
+              class="gallery-nav gallery-nav--prev"
+              type="button"
+              @click="goToPrevImage"
+              aria-label="Previous image"
+            >
+              ‹
+            </button>
+            <button
+              v-if="canNavigateImages"
+              class="gallery-nav gallery-nav--next"
+              type="button"
+              @click="goToNextImage"
+              aria-label="Next image"
+            >
+              ›
+            </button>
+          </div>
+          <div v-if="imageList.length > 1" class="thumbnail-row">
+            <button
+              v-for="(img, idx) in imageList"
+              :key="`${img}-${idx}`"
+              type="button"
+              class="thumbnail-btn"
+              :class="{ 'thumbnail-btn--active': idx === currentImageIndex }"
+              @click="setCurrentImage(idx)"
+            >
+              <img :src="img" :alt="`Listing image ${idx + 1}`" />
+            </button>
           </div>
         </div>
 
@@ -101,6 +131,7 @@ export default {
       loggedIn: !!localStorage.getItem('gf_user'),
       pickupLocations: [],
       listing: null,
+      currentImageIndex: 0,
       loading: true,
       loadError: '',
       msgBusy: false
@@ -119,11 +150,16 @@ export default {
       const map = { sale: 'badge--sale', trade: 'badge--trade', both: 'badge--both' }
       return map[this.listing?.listingType] || ''
     },
-    approvalStatusLabel() {
-      const s = this.listing?.approvalStatus
-      if (s === 'pending') return 'pending approval'
-      if (s === 'rejected') return 'not approved'
-      return ''
+    imageList() {
+      const images = this.listing?.images
+      return Array.isArray(images) ? images.filter(Boolean) : []
+    },
+    currentImageSrc() {
+      if (!this.imageList.length) return this.listing?.image || null
+      return this.imageList[this.currentImageIndex] || this.imageList[0]
+    },
+    canNavigateImages() {
+      return this.imageList.length > 1
     }
   },
   watch: {
@@ -154,6 +190,7 @@ export default {
         ])
         this.pickupLocations = meta.pickup_locations || []
         this.listing = mapDetailToListing(detail.item, detail.images)
+        this.currentImageIndex = 0
       } catch (e) {
         if (e.status === 404) this.listing = null
         else this.loadError = e.message || 'Failed to load listing.'
@@ -176,6 +213,20 @@ export default {
       } finally {
         this.msgBusy = false
       }
+    },
+    setCurrentImage(index) {
+      if (!Number.isInteger(index)) return
+      if (index < 0 || index >= this.imageList.length) return
+      this.currentImageIndex = index
+    },
+    goToPrevImage() {
+      if (!this.imageList.length) return
+      this.currentImageIndex =
+        (this.currentImageIndex - 1 + this.imageList.length) % this.imageList.length
+    },
+    goToNextImage() {
+      if (!this.imageList.length) return
+      this.currentImageIndex = (this.currentImageIndex + 1) % this.imageList.length
     }
   }
 }
@@ -220,6 +271,7 @@ export default {
 .image-section { position: sticky; top: 100px; }
 
 .main-image {
+  position: relative;
   background: white;
   border: 1px solid #e5e7eb;
   border-radius: 20px;
@@ -233,6 +285,49 @@ export default {
 .main-image img { width: 100%; height: 100%; object-fit: cover; }
 
 .image-placeholder { font-size: 96px; }
+
+.gallery-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 999px;
+  background: rgba(17, 24, 39, 0.65);
+  color: #fff;
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.gallery-nav--prev { left: 12px; }
+.gallery-nav--next { right: 12px; }
+
+.thumbnail-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  overflow-x: auto;
+}
+
+.thumbnail-btn {
+  width: 68px;
+  height: 68px;
+  border: 2px solid transparent;
+  border-radius: 10px;
+  padding: 0;
+  overflow: hidden;
+  cursor: pointer;
+  flex-shrink: 0;
+  background: #fff;
+}
+
+.thumbnail-btn img { width: 100%; height: 100%; object-fit: cover; }
+.thumbnail-btn--active { border-color: #4f46e5; }
 
 .info-section { display: flex; flex-direction: column; gap: 24px; }
 
