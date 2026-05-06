@@ -28,6 +28,14 @@
             </select>
           </div>
           <div class="filter-group">
+            <label>Sort By</label>
+            <select v-model="filters.sortOrder" @change="runSearch">
+              <option value="">Default</option>
+              <option value="price_desc">Price: High → Low</option>
+              <option value="price_asc">Price: Low → High</option>
+            </select>
+          </div>
+          <div class="filter-group">
             <label>Max Price</label>
             <input v-model="filters.maxPrice" type="number" placeholder="No limit" min="0" step="0.01" @change="applyLocalFilters" />
           </div>
@@ -66,7 +74,7 @@ export default {
   data() {
     return {
       query: '',
-      filters: { categoryId: '', courseId: '', maxPrice: '' },
+      filters: { categoryId: '', courseId: '', maxPrice: '', sortOrder: '',},
       categories: [],
       courses: [],
       listings: [],
@@ -78,10 +86,18 @@ export default {
   computed: {
     filteredListings() {
       const max = this.filters.maxPrice === '' ? null : Number(this.filters.maxPrice)
+
+      let result = this.listings
+
       if (max != null && !Number.isNaN(max)) {
         return this.listings.filter(l => l.price <= max)
       }
-      return this.listings
+      if (this.filters.sortOrder === 'price_desc'){
+        result = [...result].sort((a,b)=> b.price - a.price)
+      } else if (this.filters.sortOrder === 'price_asc'){
+        result = [...result].sort((a,b)=> a.price - b.price)
+      }
+      return result
     }
   },
   async mounted() {
