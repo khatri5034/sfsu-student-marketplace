@@ -81,8 +81,29 @@
               <MeetupLocationPicker v-model="form.pickupLocationId" :locations="pickupLocations" />
             </div>
 
-            <div class="form-group">
+            <div class="form-group form-group-images">
               <label>Images <span class="optional-note">— optional, up to 5</span></label>
+              <div class="image-picker-head">
+                <button
+                  type="button"
+                  class="btn-browse"
+                  @click.prevent="$refs.fileInput.click()"
+                >
+                  Browse…
+                </button>
+                <span class="image-upload-status" aria-live="polite">{{
+                  imageUploadNote || 'No images selected (optional, max 5).'
+                }}</span>
+              </div>
+              <input
+                ref="fileInput"
+                type="file"
+                accept="image/*"
+                class="hidden-input"
+                tabindex="-1"
+                multiple
+                @change="handleImage"
+              />
               <div class="file-upload" @click="$refs.fileInput.click()">
                 <div v-if="imagePreviews.length" class="image-preview-grid">
                   <div
@@ -105,14 +126,6 @@
                   <span class="file-hint">JPG, PNG up to 5MB each (max 5)</span>
                 </div>
               </div>
-              <input
-                ref="fileInput"
-                type="file"
-                accept="image/*"
-                class="hidden-input"
-                multiple
-                @change="handleImage"
-              />
             </div>
 
             <div v-if="error" class="error-msg">{{ error }}</div>
@@ -156,6 +169,7 @@ export default {
       },
       imageFiles: [],
       imagePreviews: [],
+      imageUploadNote: '',
       error: '',
       success: false,
       submitting: false
@@ -186,6 +200,8 @@ export default {
       if (!selectedFiles.length) return
 
       const limitedFiles = selectedFiles.slice(0, 5)
+      const attached = limitedFiles.length
+
       this.imageFiles = limitedFiles
       this.imagePreviews = await Promise.all(
         limitedFiles.map(
@@ -197,11 +213,17 @@ export default {
             })
         )
       )
+
+      this.imageUploadNote = `${attached} image${attached === 1 ? '' : 's'} attached.`
+
+      e.target.value = ''
     },
     removeImage(index) {
       if (!Number.isInteger(index) || index < 0 || index >= this.imageFiles.length) return
       this.imageFiles.splice(index, 1)
       this.imagePreviews.splice(index, 1)
+      const n = this.imageFiles.length
+      this.imageUploadNote = n ? `${n} image${n === 1 ? '' : 's'} attached.` : ''
     },
     async submitListing() {
       const user = getStoredUser()
@@ -326,6 +348,10 @@ export default {
 
 .form-group label { font-size: 14px; font-weight: 700; color: #374151; }
 
+.form-group-images {
+  position: relative;
+}
+
 .optional-note { font-weight: 400; color: #9ca3af; font-size: 13px; }
 
 .form-group input,
@@ -354,6 +380,55 @@ export default {
 .radio-group { display: flex; gap: 16px; flex-wrap: wrap; padding-top: 6px; }
 
 .radio-label { display: flex; align-items: center; gap: 6px; font-size: 14px; color: #374151; cursor: pointer; }
+
+/* Hide native file control — browser label (“No file chosen”, wrong counts) is not our source of truth */
+.form-group input.hidden-input[type='file'] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  font-size: 0;
+  line-height: 0;
+}
+
+.image-picker-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+.btn-browse {
+  flex-shrink: 0;
+  padding: 8px 14px;
+  font-size: 14px;
+  font-family: Arial, sans-serif;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  background: white;
+  color: #374151;
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s;
+}
+
+.btn-browse:hover {
+  border-color: #4f46e5;
+  color: #4f46e5;
+}
+
+.image-upload-status {
+  font-size: 13px;
+  color: #4b5563;
+  line-height: 1.45;
+}
 
 .file-upload {
   border: 2px dashed #d1d5db;
