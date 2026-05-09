@@ -136,7 +136,7 @@ export default {
   },
   async mounted() {
     if (!this.userId) {
-      this.$router.push('/login')
+      this.$router.push({ path: '/login', query: { redirect: this.$route.fullPath } })
       return
     }
     await this.refresh()

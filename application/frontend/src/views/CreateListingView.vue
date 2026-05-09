@@ -178,7 +178,7 @@ export default {
   async mounted() {
     const user = getStoredUser()
     if (!user?.id) {
-      this.$router.push('/login')
+      this.$router.push({ path: '/login', query: { redirect: this.$route.fullPath } })
       return
     }
     try {
@@ -228,7 +228,7 @@ export default {
     async submitListing() {
       const user = getStoredUser()
       if (!user?.id) {
-        this.$router.push('/login')
+        this.$router.push({ path: '/login', query: { redirect: this.$route.fullPath } })
         return
       }
 

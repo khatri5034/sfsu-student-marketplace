@@ -105,7 +105,7 @@ export default {
   async mounted() {
     const user = getStoredUser()
     if (!user?.id) {
-      this.$router.push('/login')
+      this.$router.push({ path: '/login', query: { redirect: this.$route.fullPath } })
       return
     }
     await this.loadConversations()
