@@ -19,7 +19,10 @@
             >
               <div class="conv-avatar">{{ (conv.partner_name || '?')[0] }}</div>
               <div class="conv-info">
-                <p class="conv-name">{{ conv.partner_name }}</p>
+                <p class="conv-name">
+                  {{ conv.partner_name }}
+                  <span v-if="tradeConversationIds.has(Number(conv.id))" class="trade-badge">Trade</span>
+                </p>
                 <p class="conv-listing">{{ conv.item_title }}</p>
                 <p class="conv-last">{{ conv.last_message_preview || '' }}</p>
               </div>
@@ -87,6 +90,7 @@ export default {
   data() {
     return {
       conversations: [],
+      tradeConversationIds: new Set(),
       activeId: null,
       replyText: '',
       threadMessages: [],
@@ -108,7 +112,7 @@ export default {
       this.$router.push({ path: '/login', query: { redirect: this.$route.fullPath } })
       return
     }
-    await this.loadConversations()
+    await Promise.all([this.loadConversations(), this.loadTradeConversationIds()])
 
     const qConv = this.$route.query.conversation
     const qListing = this.$route.query.listing
@@ -138,6 +142,17 @@ export default {
     }
   },
   methods: {
+    async loadTradeConversationIds() {
+      const user = getStoredUser()
+      if (!user?.id) return
+      try {
+        const data = await apiJson(`/api/trade-requests?user_id=${user.id}`)
+        const ids = (data.trades || []).filter(t => t.conversation_id).map(t => Number(t.conversation_id))
+        this.tradeConversationIds = new Set(ids)
+      } catch {
+        // non-critical
+      }
+    },
     async loadConversations() {
       const user = getStoredUser()
       this.loading = true
@@ -273,6 +288,20 @@ h1 { font-size: 40px; color: #111827; margin-bottom: 28px; }
 .conv-listing { font-size: 12px; color: #4f46e5; font-weight: 600; margin: 2px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 .conv-last { font-size: 12px; color: #9ca3af; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.trade-badge {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 1px 7px;
+  border-radius: 20px;
+  background: #fce7f3;
+  color: #9d174d;
+  vertical-align: middle;
+  margin-left: 6px;
+}
 
 .empty-conversations { padding: 32px 20px; text-align: center; color: #9ca3af; font-size: 14px; }
 

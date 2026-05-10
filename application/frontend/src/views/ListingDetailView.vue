@@ -63,7 +63,6 @@
           <div class="price-row">
             <span v-if="listing.listingType !== 'trade'" class="price">${{ listing.price }}</span>
             <span v-else class="price price--trade">Trade Only</span>
-            <span class="condition-badge">{{ listing.condition }}</span>
           </div>
 
           <div class="description">
@@ -169,6 +168,7 @@
       v-if="showTradeModal && listing"
       :listing="listing"
       @close="showTradeModal = false"
+      @trade-sent="onTradeSent"
     />
   </div>
 </template>
@@ -239,6 +239,10 @@ export default {
     this.fetchAll()
   },
   methods: {
+    onTradeSent({ conversation_id }) {
+      this.showTradeModal = false
+      this.$router.push({ path: '/messages', query: { conversation: String(conversation_id) } })
+    },
     async fetchAll() {
       this.loading = true
       this.loadError = ''
