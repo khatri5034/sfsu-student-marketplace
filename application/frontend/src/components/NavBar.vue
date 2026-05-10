@@ -14,6 +14,7 @@
         <router-link to="/create-listing" class="nav-button nav-button--post">+ Post Listing</router-link>
         <router-link to="/dashboard" class="nav-link">Dashboard</router-link>
         <router-link to="/messages" class="nav-link">Messages</router-link>
+        <router-link to="/trades" class="nav-link">Trades</router-link>
         <button class="nav-button nav-button--outline" @click="logout">Log out</button>
       </template>
     </div>
