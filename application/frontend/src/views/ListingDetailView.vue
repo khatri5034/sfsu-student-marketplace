@@ -403,12 +403,13 @@ export default {
 }
 
 .back-link {
-  display: inline-block;
+  display: block;
   color: #4f46e5;
   font-weight: 600;
   text-decoration: none;
   font-size: 14px;
   margin-bottom: 32px;
+  text-align: left;
 }
 
 .back-link:hover {
