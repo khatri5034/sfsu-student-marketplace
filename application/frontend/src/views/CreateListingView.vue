@@ -59,11 +59,32 @@
             </div>
 
             <div class="form-row">
+
               <div class="form-group">
                 <label>Category *</label>
                 <select v-model="form.categoryId" required>
                   <option value="" disabled>Select a category...</option>
-                  <option v-for="cat in categories" :key="cat.id" :value="String(cat.id)">{{ cat.name }}</option>
+                  <option
+                    v-for="cat in categories"
+                    :key="cat.id"
+                    :value="String(cat.id)"
+                  >
+                    {{ cat.name }}
+                  </option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label>Condition *</label>
+                <select v-model="form.conditionId" required>
+                  <option value="" disabled>Select a condition...</option>
+                  <option
+                    v-for="cond in conditions"
+                    :key="cond.id"
+                    :value="String(cond.id)"
+                  >
+                    {{ cond.name }}
+                  </option>
                 </select>
               </div>
             </div>
@@ -152,6 +173,7 @@ export default {
     return {
       categories: [],
       courses: [],
+      conditions:[],
       pickupLocations: [],
       typeOptions: [
         { value: 'sale', label: 'For Sale' },
@@ -165,6 +187,7 @@ export default {
         price: '',
         categoryId: '',
         courseId: '',
+        conditionId: '',
         pickupLocationId: null
       },
       imageFiles: [],
@@ -182,13 +205,15 @@ export default {
       return
     }
     try {
-      const [catRes, courseRes, locRes] = await Promise.all([
+      const [catRes, courseRes,condRes, locRes] = await Promise.all([
         apiJson('/api/meta/categories'),
         apiJson('/api/meta/courses'),
+        apiJson('/api/meta/conditions'),
         apiJson('/api/meta/pickup-locations')
       ])
       this.categories = catRes.categories || []
       this.courses = courseRes.courses || []
+      this.conditions = condRes.conditions || []
       this.pickupLocations = locRes.pickup_locations || []
     } catch (e) {
       this.error = e.message || 'Could not load form data.'
@@ -242,6 +267,7 @@ export default {
           listing_type: this.form.listingType,
           category_id: this.form.categoryId ? Number.parseInt(this.form.categoryId, 10) : null,
           course_id: this.form.courseId ? Number.parseInt(this.form.courseId, 10) : null,
+          condition_id: this.form.conditionId ? Number.parseInt(this.form.conditionId, 10) : null,
           pickup_location_id: this.form.pickupLocationId
         }
         if (this.form.listingType !== 'trade') {

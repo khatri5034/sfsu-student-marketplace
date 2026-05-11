@@ -6,10 +6,11 @@ async function setupMeilisearchIndexes() {
     const index = meili.index('items');
 
     await index.updateSettings({
-      searchableAttributes: ['title', 'description', 'course_name', 'course_code'],
+      searchableAttributes: ['title', 'description', 'course_name', 'course_code','condition_name'],
       filterableAttributes: [
         'category_id',
         'course_id',
+        'condition_id',
         'status',
         'approval_status',
         'listing_type',
@@ -25,8 +26,10 @@ async function setupMeilisearchIndexes() {
         'image_url',
         'category_id',
         'course_id',
+        'condition_id',
         'course_name',
         'course_code',
+        'condition_name',
         'listing_type',
         'seller_id',
         'pickup_location_id',
@@ -54,8 +57,10 @@ async function setupMeilisearchIndexes() {
           ) AS image_url,
           i.category_id,
           i.course_id,
+          i.condition_id,
           c.course_code,
           c.course_name,
+          cond.name AS condition_name,
           i.listing_type,
           i.seller_id,
           i.pickup_location_id,
@@ -65,6 +70,8 @@ async function setupMeilisearchIndexes() {
           i.created_at
         FROM items i
         LEFT JOIN courses c ON i.course_id = c.id
+        LEFT JOIN conditions cond ON i.condition_id = cond.id
+
       `);
       await index.addDocuments(rows, { primaryKey: 'id' });
     } catch (err) {
