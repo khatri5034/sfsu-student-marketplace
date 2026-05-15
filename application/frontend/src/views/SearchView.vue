@@ -28,6 +28,13 @@
             </select>
           </div>
           <div class="filter-group">
+            <label>Condition</label>
+            <select v-model="filters.conditionId" @change="runSearch">
+              <option value="">All conditions</option>
+              <option v-for="cond in conditions" :key="cond.id" :value="String(cond.id)">{{ cond.name }}</option>
+            </select>
+          </div>
+          <div class="filter-group">
             <label>Sort By</label>
             <select v-model="filters.sortOrder" @change="runSearch">
               <option value="">Default</option>
@@ -74,9 +81,10 @@ export default {
   data() {
     return {
       query: '',
-      filters: { categoryId: '', courseId: '', maxPrice: '', sortOrder: '',},
+      filters: { categoryId: '', courseId: '',conditionId:'', maxPrice: '', sortOrder: '',},
       categories: [],
       courses: [],
+      conditions: [],
       listings: [],
       categoryNameById: {},
       loading: false,
@@ -107,12 +115,14 @@ export default {
   methods: {
     async loadMeta() {
       try {
-        const [catRes, courseRes] = await Promise.all([
+        const [catRes, courseRes,condRes] = await Promise.all([
           apiJson('/api/meta/categories'),
-          apiJson('/api/meta/courses')
+          apiJson('/api/meta/courses'),
+          apiJson('/api/meta/conditions')
         ])
         this.categories = catRes.categories || []
         this.courses = courseRes.courses || []
+        this.conditions = condRes.conditions || []
         const map = {}
         for (const c of this.categories) map[c.id] = c.name
         this.categoryNameById = map
@@ -125,6 +135,7 @@ export default {
       if (this.query.trim()) p.set('q', this.query.trim())
       if (this.filters.categoryId) p.set('category_id', this.filters.categoryId)
       if (this.filters.courseId) p.set('course_id', this.filters.courseId)
+      if (this.filters.conditionId) p.set('condition_id', this.filters.conditionId)
       const qs = p.toString()
       return qs ? `/api/items/search?${qs}` : '/api/items/search'
     },
@@ -147,7 +158,7 @@ export default {
     },
     clearFilters() {
       this.query = ''
-      this.filters = { categoryId: '', courseId: '', maxPrice: '' }
+      this.filters = { categoryId: '', courseId: '',conditionId:'', maxPrice: '' }
       this.runSearch()
     }
   }

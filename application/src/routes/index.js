@@ -505,6 +505,18 @@ router.get('/api/meta/courses', async (req, res) => {
   }
 });
 
+router.get('/api/meta/conditions', async (req, res) => {
+  try {
+    const [rows] = await db.query(`
+      SELECT id, name FROM conditions
+      ORDER BY FIELD(name,'Factory New','Like New','Used','Well Used','Broken','Other')`)
+    res.json({ conditions: rows })
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: 'Failed to load conditions' })
+  }
+})
+
 router.get('/api/meta/pickup-locations', async (req, res) => {
   try {
     const [rows] = await db.query(
@@ -533,6 +545,7 @@ router.get('/api/items/home', async (req, res) => {
          i.status,
          i.created_at,
          cat.name AS category_name,
+         cond.name AS condition_name,
          c.course_code,
          (
            SELECT li.image_url
@@ -544,6 +557,7 @@ router.get('/api/items/home', async (req, res) => {
        FROM items i
        LEFT JOIN categories cat ON cat.id = i.category_id
        LEFT JOIN courses c ON c.id = i.course_id
+       LEFT JOIN conditions cond ON cond.id = i.condition_id
        WHERE i.status = 'active'
          AND i.approval_status = 'approved'
        ORDER BY i.created_at DESC, i.id DESC
@@ -600,6 +614,7 @@ router.get('/api/items/search', async (req, res) => {
   const q = (req.query.q || '').toString();
   const categoryId = req.query.category_id;
   const courseId = req.query.course_id;
+  const conditionId = req.query.condition_id;
 
   try {
     const index = meili.index('items');
@@ -612,6 +627,9 @@ router.get('/api/items/search', async (req, res) => {
 
     if (courseId) {
       filters.push(`course_id = ${Number(courseId)}`);
+    }
+    if (conditionId) {
+      filters.push(`condition_id = ${Number(conditionId)}`);
     }
 
     const result = await index.search(q, {
@@ -642,6 +660,7 @@ router.post('/api/items', async (req, res) => {
 
   const categoryRaw = req.body.category_id;
   const courseRaw = req.body.course_id;
+  const conditionRaw = req.body.condition_id;
   const pickupRaw = req.body.pickup_location_id;
 
   const categoryId =
@@ -651,6 +670,10 @@ router.post('/api/items', async (req, res) => {
   const courseId =
     courseRaw !== undefined && courseRaw !== null && courseRaw !== ''
       ? Number.parseInt(courseRaw, 10)
+      : null;
+  const conditionId =
+    conditionRaw !== undefined && conditionRaw !== null && conditionRaw !== ''
+      ? Number.parseInt(conditionRaw, 10)
       : null;
   const pickupLocationId =
     pickupRaw !== undefined && pickupRaw !== null && pickupRaw !== ''
@@ -675,11 +698,12 @@ router.post('/api/items', async (req, res) => {
          price,
          category_id,
          course_id,
+         condition_id,
          listing_type,
          pickup_location_id,
          status
        )
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'active')`,
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'active')`,
       [
         sellerId,
         title,
@@ -687,6 +711,7 @@ router.post('/api/items', async (req, res) => {
         price,
         Number.isInteger(categoryId) ? categoryId : null,
         Number.isInteger(courseId) ? courseId : null,
+        Number.isInteger(conditionId) ? conditionId : null,
         listingType,
         Number.isInteger(pickupLocationId) ? pickupLocationId : null,
       ]
@@ -723,12 +748,14 @@ router.get('/api/items/:id', async (req, res) => {
          i.price,
          i.category_id,
          i.course_id,
+         i.condition_id,
          i.listing_type,
          i.pickup_location_id,
          i.status,
          i.approval_status,
          i.created_at,
          cat.name AS category_name,
+         cond.name AS condition_name,
          c.course_code,
          c.course_name,
          CONCAT(u.first_name, ' ', u.last_name) AS seller_name,
@@ -737,6 +764,7 @@ router.get('/api/items/:id', async (req, res) => {
        JOIN users u ON u.id = i.seller_id
        LEFT JOIN categories cat ON cat.id = i.category_id
        LEFT JOIN courses c ON c.id = i.course_id
+       LEFT JOIN conditions cond ON cond.id = i.condition_id
        WHERE i.id = ?
        LIMIT 1`,
       [id]

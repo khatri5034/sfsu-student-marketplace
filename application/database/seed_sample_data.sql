@@ -16,6 +16,7 @@ TRUNCATE TABLE items;
 TRUNCATE TABLE pickup_locations;
 TRUNCATE TABLE courses;
 TRUNCATE TABLE categories;
+TRUNCATE TABLE conditions;
 TRUNCATE TABLE users;
 
 SET FOREIGN_KEY_CHECKS = 1;
@@ -32,11 +33,23 @@ INSERT INTO courses (course_code, course_name) VALUES
   ('CSC648', 'Software Engineering'),
   ('CSC415', 'Operating Systems');
 
+INSERT INTO conditions (name) VALUES
+  ('Factory New'),
+  ('Like New'),
+  ('Used'),
+  ('Well Used'),
+  ('Broken');
+
 SET @cat_textbooks = (SELECT id FROM categories WHERE name = 'Textbooks' LIMIT 1);
 SET @cat_electronics = (SELECT id FROM categories WHERE name = 'Electronics' LIMIT 1);
 SET @cat_other = (SELECT id FROM categories WHERE name = 'Other' LIMIT 1);
 SET @course_csc648 = (SELECT id FROM courses WHERE course_code = 'CSC648' LIMIT 1);
 SET @course_csc415 = (SELECT id FROM courses WHERE course_code = 'CSC415' LIMIT 1);
+SET @cond_new = (SELECT id FROM conditions WHERE name = 'Factory New' LIMIT 1);
+SET @cond_like_new = (SELECT id FROM conditions WHERE name = 'Like New' LIMIT 1);
+SET @cond_used = (SELECT id FROM conditions WHERE name = 'Used' LIMIT 1);
+SET @cond_well_used = (SELECT id FROM conditions WHERE name = 'Well Used' LIMIT 1);
+SET @cond_broken = (SELECT id FROM conditions WHERE name = 'Broken' LIMIT 1);
 
 INSERT INTO users (
   first_name,
@@ -61,6 +74,7 @@ INSERT INTO items (
   description,
   price,
   category_id,
+  condition_id,
   course_id,
   listing_type,
   pickup_location_id,
@@ -69,10 +83,10 @@ INSERT INTO items (
   is_featured
 )
 VALUES
-  (@user1_id, 'Game Boy Advance', 'Handheld console in good condition.', 65.00, @cat_electronics, @course_csc415, 'sale', NULL, 'active', 'approved', FALSE),
-  (@user1_id, 'iPhone 11', 'Unlocked iPhone with charger included.', 240.00, @cat_electronics, @course_csc648, 'sale', NULL, 'active', 'approved', FALSE),
-  (@user2_id, 'Math Textbook', 'Used calculus textbook with notes.', 30.00, @cat_textbooks, @course_csc648, 'sale', NULL, 'active', 'approved', FALSE),
-  (@user2_id, 'Monkey Plush Toy', 'Soft toy in excellent condition.', 18.00, @cat_other, @course_csc415, 'sale', NULL, 'active', 'approved', FALSE);
+  (@user1_id, 'Game Boy Advance', 'Handheld console in good condition.', 65.00, @cat_electronics,@cond_like_new, @course_csc415, 'sale', NULL, 'active', 'approved', FALSE),
+  (@user1_id, 'iPhone 11', 'Unlocked iPhone with charger included.', 240.00, @cat_electronics,@cond_used, @course_csc648, 'sale', NULL, 'active', 'approved', FALSE),
+  (@user2_id, 'Math Textbook', 'Used calculus textbook with notes.', 30.00, @cat_textbooks,@cond_like_new, @course_csc648, 'sale', NULL, 'active', 'approved', FALSE),
+  (@user2_id, 'Monkey Plush Toy', 'Soft toy in excellent condition.', 18.00, @cat_other,@cond_broken, @course_csc415, 'sale', NULL, 'active', 'approved', FALSE);
 
 SET @item_gameboy = (SELECT id FROM items WHERE seller_id = @user1_id AND title = 'Game Boy Advance' LIMIT 1);
 SET @item_iphone = (SELECT id FROM items WHERE seller_id = @user1_id AND title = 'iPhone 11' LIMIT 1);

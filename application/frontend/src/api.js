@@ -41,6 +41,7 @@ export function listingTypeToUi(t) {
 
 export function mapSearchHit(hit, categoryNameById) {
   const cat = categoryNameById[hit.category_id]
+
   return {
     id: hit.id,
     title: hit.title,
@@ -48,7 +49,7 @@ export function mapSearchHit(hit, categoryNameById) {
     price: hit.price != null ? Number(hit.price) : 0,
     category: cat || 'Other',
     course: hit.course_code || null,
-    condition: '—',
+    condition: hit.condition_name|| 'hits',
     listingType: listingTypeToUi(hit.listing_type),
     pickupLocationId: hit.pickup_location_id,
     image: hit.image_url || null,
@@ -64,7 +65,7 @@ export function mapHomeRow(row) {
     price: row.price != null ? Number(row.price) : 0,
     category: row.category_name || 'Other',
     course: row.course_code || null,
-    condition: '—',
+    condition: row.condition_name || '-',
     listingType: listingTypeToUi(row.listing_type),
     image: row.image_url || null,
   }
@@ -77,7 +78,7 @@ export function mapSellerDashboardRow(row) {
     price: row.price != null ? Number(row.price) : 0,
     listingType: listingTypeToUi(row.listing_type),
     category: row.category_name || '—',
-    condition: '—',
+    condition: row.condition_name || '-',
     image: row.image_url || null,
     status: row.status,
     approvalStatus: row.approval_status || 'pending',
@@ -96,7 +97,7 @@ export function mapDetailToListing(item, imageUrls) {
     category: name.toLowerCase().replace(/\s+/g, '-'),
     categoryLabel: name,
     course: item.course_code || null,
-    condition: '—',
+    condition: item.condition_name||'-',
     listingType: listingTypeToUi(item.listing_type),
     pickupLocationId: item.pickup_location_id,
     image: imageUrls && imageUrls.length ? imageUrls[0] : null,
