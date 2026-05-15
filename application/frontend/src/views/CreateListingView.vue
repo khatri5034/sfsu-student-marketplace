@@ -24,18 +24,18 @@
 
           <form @submit.prevent="submitListing">
             <div class="form-group">
-              <label>Title *</label>
+              <label>Title <span class="asterisk">*</span></label>
               <input v-model="form.title" type="text" placeholder="e.g. CSC 648 Textbook, MacBook Charger..." required />
             </div>
 
             <div class="form-group">
-              <label>Description *</label>
+              <label>Description <span class="asterisk">*</span></label>
               <textarea v-model="form.description" rows="4" placeholder="Describe your item — condition, what's included, why you're selling..." required></textarea>
             </div>
 
             <div class="form-row">
               <div class="form-group">
-                <label>Listing Type *</label>
+                <label>Listing Type <span class="asterisk">*</span></label>
                 <div class="radio-group">
                   <label class="radio-label" v-for="opt in typeOptions" :key="opt.value">
                     <input type="radio" v-model="form.listingType" :value="opt.value" />
@@ -60,7 +60,7 @@
 
             <div class="form-row">
               <div class="form-group">
-                <label>Category *</label>
+                <label>Category <span class="asterisk">*</span></label>
                 <select v-model="form.categoryId" required>
                   <option value="" disabled>Select a category...</option>
                   <option v-for="cat in categories" :key="cat.id" :value="String(cat.id)">{{ cat.name }}</option>
@@ -309,6 +309,10 @@ export default {
   padding: 60px 48px;
   display: flex;
   align-items: flex-start;
+}
+
+.asterisk {
+  color: #dc2626;
 }
 
 .aside-inner { color: white; }
