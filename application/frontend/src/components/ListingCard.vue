@@ -9,7 +9,6 @@
       <h3 class="listing-title">{{ listing.title }}</h3>
       <div class="listing-meta">
         <span class="listing-price">${{ listing.price }}</span>
-        <span class="listing-condition">{{ listing.condition }}</span>
       </div>
     </div>
   </div>

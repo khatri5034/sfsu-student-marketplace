@@ -63,7 +63,6 @@
           <div class="price-row">
             <span v-if="listing.listingType !== 'trade'" class="price">${{ listing.price }}</span>
             <span v-else class="price price--trade">Trade Only</span>
-            <span class="condition-badge">{{ listing.condition }}</span>
           </div>
 
           <div class="description">
