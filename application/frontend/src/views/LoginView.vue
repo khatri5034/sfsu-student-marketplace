@@ -116,7 +116,7 @@ export default {
             name
           })
         )
-        this.$router.push('/dashboard')
+        this.$router.push(this.$route.query.redirect || '/dashboard')
       } catch (e) {
         this.error = e.message || 'Login failed.'
       } finally {

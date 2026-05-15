@@ -79,12 +79,5 @@ export default {
 
 .listing-price { font-size: 18px; font-weight: 800; color: #111827; }
 
-.listing-condition {
-  font-size: 12px;
-  background: #eef2ff;
-  color: #4f46e5;
-  padding: 4px 10px;
-  border-radius: 20px;
-  font-weight: 600;
-}
+
 </style>

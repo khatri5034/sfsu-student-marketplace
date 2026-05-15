@@ -168,6 +168,7 @@
       v-if="showTradeModal && listing"
       :listing="listing"
       @close="showTradeModal = false"
+      @trade-sent="onTradeSent"
     />
   </div>
 </template>
@@ -238,6 +239,10 @@ export default {
     this.fetchAll()
   },
   methods: {
+    onTradeSent({ conversation_id }) {
+      this.showTradeModal = false
+      this.$router.push({ path: '/messages', query: { conversation: String(conversation_id) } })
+    },
     async fetchAll() {
       this.loading = true
       this.loadError = ''
@@ -405,6 +410,7 @@ export default {
   text-decoration: none;
   font-size: 14px;
   margin-bottom: 32px;
+  text-align: left;
 }
 
 .back-link:hover {

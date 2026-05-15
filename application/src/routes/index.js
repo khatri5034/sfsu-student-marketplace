@@ -325,6 +325,164 @@ router.post('/api/conversations', async (req, res) => {
   }
 });
 
+// ── Trade Requests ────────────────────────────────────────────────────────────
+
+router.post('/api/trade-requests', async (req, res) => {
+  const requesterId = Number.parseInt(req.body.requester_id, 10);
+  const requestedItemId = Number.parseInt(req.body.requested_item_id, 10);
+  const offeredItemId = Number.parseInt(req.body.offered_item_id, 10);
+
+  if (
+    !Number.isInteger(requesterId) || requesterId <= 0 ||
+    !Number.isInteger(requestedItemId) || requestedItemId <= 0 ||
+    !Number.isInteger(offeredItemId) || offeredItemId <= 0
+  ) {
+    return res.status(400).json({ error: 'requester_id, requested_item_id, and offered_item_id are required' });
+  }
+
+  try {
+    const [[requestedItem]] = await db.query(
+      `SELECT id, seller_id FROM items WHERE id = ? AND status != 'removed' LIMIT 1`,
+      [requestedItemId]
+    );
+    if (!requestedItem) return res.status(404).json({ error: 'Requested item not found' });
+
+    if (requestedItem.seller_id === requesterId) {
+      return res.status(400).json({ error: 'Cannot trade with yourself' });
+    }
+
+    const [[offeredItem]] = await db.query(
+      `SELECT id, seller_id FROM items WHERE id = ? AND status != 'removed' LIMIT 1`,
+      [offeredItemId]
+    );
+    if (!offeredItem || offeredItem.seller_id !== requesterId) {
+      return res.status(403).json({ error: 'Offered item does not belong to requester' });
+    }
+
+    const [existing] = await db.query(
+      `SELECT id FROM trade_requests
+       WHERE requester_id = ? AND requested_item_id = ? AND offered_item_id = ?
+         AND status != 'cancelled'
+       LIMIT 1`,
+      [requesterId, requestedItemId, offeredItemId]
+    );
+    if (existing.length) {
+      const existingConv = await db.query(
+        `SELECT id FROM conversations WHERE item_id = ? AND buyer_id = ? AND seller_id = ? LIMIT 1`,
+        [requestedItemId, requesterId, requestedItem.seller_id]
+      );
+      const convId = existingConv[0][0]?.id || null;
+      return res.json({ trade_request_id: existing[0].id, conversation_id: convId, created: false });
+    }
+
+    const [ins] = await db.query(
+      `INSERT INTO trade_requests (requester_id, requested_item_id, offered_item_id) VALUES (?, ?, ?)`,
+      [requesterId, requestedItemId, offeredItemId]
+    );
+
+    const [convExisting] = await db.query(
+      `SELECT id FROM conversations WHERE item_id = ? AND buyer_id = ? AND seller_id = ? LIMIT 1`,
+      [requestedItemId, requesterId, requestedItem.seller_id]
+    );
+    let conversationId;
+    if (convExisting.length) {
+      conversationId = convExisting[0].id;
+    } else {
+      const [convIns] = await db.query(
+        `INSERT INTO conversations (item_id, buyer_id, seller_id, last_message_at) VALUES (?, ?, ?, NULL)`,
+        [requestedItemId, requesterId, requestedItem.seller_id]
+      );
+      conversationId = convIns.insertId;
+    }
+
+    res.status(201).json({ trade_request_id: ins.insertId, conversation_id: conversationId, created: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to create trade request' });
+  }
+});
+
+router.get('/api/trade-requests', async (req, res) => {
+  const userId = Number.parseInt(req.query.user_id, 10);
+  if (!Number.isInteger(userId) || userId <= 0) {
+    return res.status(400).json({ error: 'user_id is required' });
+  }
+
+  try {
+    const [rows] = await db.query(
+      `SELECT
+         tr.id, tr.requester_id, tr.requested_item_id, tr.offered_item_id,
+         tr.status, tr.created_at,
+         ri.title          AS requested_item_title,
+         ri.seller_id      AS requested_item_seller_id,
+         (SELECT li.image_url FROM listing_images li
+          WHERE li.item_id = ri.id ORDER BY li.sort_order ASC, li.id ASC LIMIT 1) AS requested_item_image,
+         oi.title          AS offered_item_title,
+         (SELECT li2.image_url FROM listing_images li2
+          WHERE li2.item_id = oi.id ORDER BY li2.sort_order ASC, li2.id ASC LIMIT 1) AS offered_item_image,
+         CONCAT(ru.first_name, ' ', ru.last_name) AS requester_name,
+         c.id              AS conversation_id
+       FROM trade_requests tr
+       JOIN items ri ON ri.id = tr.requested_item_id
+       JOIN items oi ON oi.id = tr.offered_item_id
+       JOIN users ru ON ru.id = tr.requester_id
+       LEFT JOIN conversations c
+         ON c.item_id = tr.requested_item_id
+        AND c.buyer_id = tr.requester_id
+        AND c.seller_id = ri.seller_id
+       WHERE tr.requester_id = ? OR ri.seller_id = ?
+       ORDER BY tr.created_at DESC, tr.id DESC`,
+      [userId, userId]
+    );
+    res.json({ trades: rows });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to fetch trade requests' });
+  }
+});
+
+router.patch('/api/trade-requests/:id', async (req, res) => {
+  const tradeId = Number.parseInt(req.params.id, 10);
+  const userId = Number.parseInt(req.body.user_id, 10);
+  const { status } = req.body;
+
+  if (!Number.isInteger(tradeId) || tradeId <= 0 || !Number.isInteger(userId) || userId <= 0) {
+    return res.status(400).json({ error: 'Invalid id or user_id' });
+  }
+  if (!['accepted', 'declined', 'cancelled'].includes(status)) {
+    return res.status(400).json({ error: 'status must be accepted, declined, or cancelled' });
+  }
+
+  try {
+    const [[trade]] = await db.query(
+      `SELECT tr.id, tr.requester_id, tr.status, ri.seller_id AS item_seller_id
+       FROM trade_requests tr
+       JOIN items ri ON ri.id = tr.requested_item_id
+       WHERE tr.id = ? LIMIT 1`,
+      [tradeId]
+    );
+    if (!trade) return res.status(404).json({ error: 'Trade request not found' });
+
+    if (['accepted', 'declined'].includes(status) && userId !== trade.item_seller_id) {
+      return res.status(403).json({ error: 'Only the item owner can accept or decline' });
+    }
+    if (status === 'cancelled' && userId !== trade.requester_id) {
+      return res.status(403).json({ error: 'Only the requester can cancel' });
+    }
+    if (['accepted', 'declined', 'cancelled'].includes(trade.status)) {
+      return res.status(400).json({ error: 'Trade request is already closed' });
+    }
+
+    await db.query(`UPDATE trade_requests SET status = ? WHERE id = ?`, [status, tradeId]);
+    res.json({ success: true, status });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to update trade request' });
+  }
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+
 router.get('/api/meta/categories', async (req, res) => {
   try {
     const [rows] = await db.query('SELECT id, name FROM categories ORDER BY name ASC');

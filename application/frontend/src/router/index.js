@@ -7,6 +7,7 @@ import DashboardView from '../views/DashboardView.vue'
 import CreateListingView from '../views/CreateListingView.vue'
 import ListingDetailView from '../views/ListingDetailView.vue'
 import MessagingView from '../views/MessagingView.vue'
+import TradesView from '../views/TradesView.vue'
 import TeamView from '../views/TeamView.vue'
 import LoginView from '../views/LoginView.vue'
 import RegisterView from '../views/RegisterView.vue'
@@ -20,6 +21,7 @@ const routes = [
   { path: '/create-listing', component: CreateListingView },
   { path: '/listing/:id', component: ListingDetailView },
   { path: '/messages', component: MessagingView },
+  { path: '/trades', component: TradesView },
   { path: '/team', component: TeamView },
   { path: '/login', component: LoginView },
   { path: '/register', component: RegisterView }
