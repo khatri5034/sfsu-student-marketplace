@@ -346,7 +346,7 @@ export default {
 
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
 
-.form-group label { font-size: 14px; font-weight: 700; color: #374151; }
+.form-group label { font-size: 14px; font-weight: 700; color: #374151; text-align: left; align-self: flex-start; }
 
 .form-group-images {
   position: relative;
