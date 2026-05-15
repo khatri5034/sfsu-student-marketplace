@@ -36,12 +36,12 @@
             <div class="form-row">
               <div class="form-group">
                 <label>Listing Type <span class="asterisk">*</span></label>
-                <div class="radio-group">
-                  <label class="radio-label" v-for="opt in typeOptions" :key="opt.value">
-                    <input type="radio" v-model="form.listingType" :value="opt.value" />
+                <select v-model="form.listingType" required>
+                  <option disabled value="">Select a listing type...</option>
+                  <option v-for="opt in typeOptions" :key="opt.value" :value="opt.value">
                     {{ opt.label }}
-                  </label>
-                </div>
+                  </option>
+                </select>
               </div>
 
               <div class="form-group">
@@ -161,7 +161,7 @@ export default {
       form: {
         title: '',
         description: '',
-        listingType: 'sale',
+        listingType: '',
         price: '',
         categoryId: '',
         courseId: '',
@@ -380,10 +380,6 @@ export default {
 .form-group textarea::placeholder { color: #6b7280; opacity: 1; }
 
 .form-group input:disabled { background: #f3f4f6; color: #9ca3af; cursor: not-allowed; }
-
-.radio-group { display: flex; gap: 16px; flex-wrap: wrap; padding-top: 6px; }
-
-.radio-label { display: flex; align-items: center; gap: 6px; font-size: 14px; color: #374151; cursor: pointer; }
 
 /* Hide native file control — browser label (“No file chosen”, wrong counts) is not our source of truth */
 .form-group input.hidden-input[type='file'] {
