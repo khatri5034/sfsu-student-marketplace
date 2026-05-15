@@ -567,7 +567,7 @@ h1 {
 .price-row {
   display: flex;
   align-items: center;
-  gap: 16px;
+  justify-content: center;
 }
 
 .price {
