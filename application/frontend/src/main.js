@@ -2,7 +2,7 @@ import { createApp } from 'vue'
 import App from './App.vue'
 import router from './router'
 import './style.css'
-import VueGtag from 'vue-gtag'
+import * as VueGtag from 'vue-gtag'
 
 const app = createApp(App)
 
