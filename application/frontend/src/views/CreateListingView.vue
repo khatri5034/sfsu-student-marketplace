@@ -22,7 +22,7 @@
 
           <h2>New Listing</h2>
 
-          <form @submit.prevent="submitListing">
+         <form @submit.prevent="submitListing" novalidate>
             <div class="form-group">
               <label>Title <span class="asterisk">*</span></label>
               <input v-model="form.title" type="text" placeholder="e.g. CSC 648 Textbook, MacBook Charger..." required />
@@ -49,7 +49,6 @@
                 <input
                   v-model="form.price"
                   type="number"
-                  min="0"
                   step="0.01"
                   placeholder="0.00"
                   :disabled="form.listingType === 'trade'"
@@ -108,7 +107,7 @@
                 <button
                   type="button"
                   class="btn-browse"
-                  @click.prevent="$refs.fileInput.click()"
+                  @click.prevent="openFilePicker"
                 >
                   Browse…
                 </button>
@@ -125,26 +124,43 @@
                 multiple
                 @change="handleImage"
               />
-              <div class="file-upload" @click="$refs.fileInput.click()">
-                <div v-if="imagePreviews.length" class="image-preview-grid">
-                  <div
-                    v-for="(preview, index) in imagePreviews"
-                    :key="`${preview}-${index}`"
-                    class="image-preview"
-                  >
-                    <button
-                      type="button"
-                      class="remove-image-btn"
-                      aria-label="Remove image"
-                      @click.stop.prevent="removeImage(index)"
-                    />
-                    <img :src="preview" :alt="`Preview ${index + 1}`" />
+              <div
+                class="file-upload"
+                :class="{ 'file-upload--has-images': imagePreviews.length > 0 }"
+                @click="openFilePicker"
+              >
+                <div class="file-upload-body">
+                  <div v-if="imagePreviews.length" class="image-preview-grid">
+                    <div
+                      v-for="(preview, index) in imagePreviews"
+                      :key="`${preview}-${index}`"
+                      class="image-preview"
+                    >
+                      <button
+                        type="button"
+                        class="remove-image-btn"
+                        aria-label="Remove image"
+                        @click.stop.prevent="removeImage(index)"
+                      />
+                      <img :src="preview" :alt="`Preview ${index + 1}`" />
+                    </div>
                   </div>
-                </div>
-                <div v-else class="file-upload-prompt">
-                  <span class="upload-icon">📷</span>
-                  <span>Click to upload images</span>
-                  <span class="file-hint">JPG, PNG up to 5MB each (max 5)</span>
+                  <div
+                    v-if="!imagePreviews.length"
+                    class="file-upload-prompt file-upload-prompt--empty"
+                  >
+                    <span class="upload-icon">📷</span>
+                    <span>Click to upload images</span>
+                    <span class="file-hint">JPG, PNG up to 5MB each (max 5)</span>
+                  </div>
+                  <div
+                    v-else-if="canAddMoreImages"
+                    class="file-upload-prompt file-upload-prompt--add-more"
+                  >
+                    <span class="upload-icon">📷</span>
+                    <span>Click to add more images</span>
+                    <span class="file-hint">Up to {{ 5 - imagePreviews.length }} more</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -198,6 +214,11 @@ export default {
       submitting: false
     }
   },
+  computed: {
+    canAddMoreImages() {
+      return this.imageFiles.length < 5
+    }
+  },
   async mounted() {
     const user = getStoredUser()
     if (!user?.id) {
@@ -220,16 +241,13 @@ export default {
     }
   },
   methods: {
-    async handleImage(e) {
-      const selectedFiles = Array.from(e.target.files || [])
-      if (!selectedFiles.length) return
-
-      const limitedFiles = selectedFiles.slice(0, 5)
-      const attached = limitedFiles.length
-
-      this.imageFiles = limitedFiles
-      this.imagePreviews = await Promise.all(
-        limitedFiles.map(
+    openFilePicker() {
+      if (!this.canAddMoreImages) return
+      this.$refs.fileInput?.click()
+    },
+    async readImagePreviews(files) {
+      return Promise.all(
+        files.map(
           file =>
             new Promise(resolve => {
               const reader = new FileReader()
@@ -238,7 +256,19 @@ export default {
             })
         )
       )
+    },
+    async handleImage(e) {
+      const selectedFiles = Array.from(e.target.files || [])
+      if (!selectedFiles.length) return
 
+      const remaining = 5 - this.imageFiles.length
+      if (remaining <= 0) return
+
+      const mergedFiles = [...this.imageFiles, ...selectedFiles.slice(0, remaining)]
+      const attached = mergedFiles.length
+
+      this.imageFiles = mergedFiles
+      this.imagePreviews = await this.readImagePreviews(mergedFiles)
       this.imageUploadNote = `${attached} image${attached === 1 ? '' : 's'} attached.`
 
       e.target.value = ''
@@ -250,77 +280,108 @@ export default {
       const n = this.imageFiles.length
       this.imageUploadNote = n ? `${n} image${n === 1 ? '' : 's'} attached.` : ''
     },
-    async submitListing() {
-      const user = getStoredUser()
-      if (!user?.id) {
-        this.$router.push({ path: '/login', query: { redirect: this.$route.fullPath } })
+   async submitListing() {
+  const user = getStoredUser()
+  if (!user?.id) {
+    this.$router.push({ path: '/login', query: { redirect: this.$route.fullPath } })
+    return
+  }
+
+  if (this.form.title.trim().length === 0) {
+  alert('Title cannot be empty.')
+  return
+}
+
+if (this.form.title.trim().length > 255) {
+  alert('Title is too long.')
+  return
+}
+  // Custom popup validations
+  if (!this.form.title.trim()) {
+    alert('Title is required.')
+    return
+  }
+
+  if (!this.form.description.trim()) {
+    alert('Description is required.')
+    return
+  }
+
+  if (!this.form.listingType) {
+    alert('Please select a listing type.')
+    return
+  }
+
+  if (!this.form.categoryId) {
+    alert('Please select a category.')
+    return
+  }
+
+  if (this.form.listingType !== 'trade') {
+    const price = this.form.price === '' ? 0 : Number(this.form.price)
+
+    if (Number.isNaN(price) || price < 0) {
+      alert('Price must be 0 or greater.')
+      return
+    }
+  }
+
+  this.error = ''
+  this.submitting = true
+
+  try {
+    const body = {
+      seller_id: user.id,
+      title: this.form.title.trim(),
+      description: this.form.description.trim(),
+      listing_type: this.form.listingType,
+      category_id: this.form.categoryId ? Number.parseInt(this.form.categoryId, 10) : null,
+      course_id: this.form.courseId ? Number.parseInt(this.form.courseId, 10) : null,
+      condition_id: this.form.conditionId ? Number.parseInt(this.form.conditionId, 10) : null,
+      pickup_location_id: this.form.pickupLocationId
+    }
+
+    if (this.form.listingType !== 'trade') {
+      body.price = this.form.price === '' ? 0 : Number(this.form.price)
+    }
+
+    let created
+    try {
+      created = await apiJson('/api/items', {
+        method: 'POST',
+        body: JSON.stringify(body)
+      })
+    } catch (e) {
+      this.error = e.message || 'Could not create listing.'
+      return
+    }
+
+    if (this.imageFiles.length) {
+      const fd = new FormData()
+      for (const file of this.imageFiles) {
+        fd.append('images', file)
+      }
+
+      const r = await fetch(`/api/items/${created.id}/images`, {
+        method: 'POST',
+        body: fd
+      })
+
+      if (!r.ok) {
+        alert('Image upload failed.')
         return
       }
-
-      this.error = ''
-      this.submitting = true
-      try {
-        const body = {
-          seller_id: user.id,
-          title: this.form.title.trim(),
-          description: this.form.description.trim(),
-          listing_type: this.form.listingType,
-          category_id: this.form.categoryId ? Number.parseInt(this.form.categoryId, 10) : null,
-          course_id: this.form.courseId ? Number.parseInt(this.form.courseId, 10) : null,
-          condition_id: this.form.conditionId ? Number.parseInt(this.form.conditionId, 10) : null,
-          pickup_location_id: this.form.pickupLocationId
-        }
-        if (this.form.listingType !== 'trade') {
-          body.price = this.form.price === '' ? 0 : Number(this.form.price)
-        }
-
-        let created
-        try {
-          created = await apiJson('/api/items', {
-            method: 'POST',
-            body: JSON.stringify(body)
-          })
-        } catch (e) {
-          this.error = e.message || 'Could not create listing.'
-          return
-        }
-
-        if (this.imageFiles.length) {
-          const fd = new FormData()
-          for (const file of this.imageFiles) {
-            fd.append('images', file)
-          }
-          const r = await fetch(`/api/items/${created.id}/images`, {
-            method: 'POST',
-            body: fd
-          })
-          if (!r.ok) {
-            const text = await r.text()
-            let detail = ''
-            try {
-              const j = JSON.parse(text)
-              const m = j && (j.error ?? j.message)
-              if (typeof m === 'string' && m.trim()) detail = m.trim()
-            } catch {
-              if (typeof text === 'string' && text.trim()) {
-                detail = text.trim().slice(0, 240)
-              }
-            }
-            this.error =
-              detail ||
-              'Invalid image type or upload failed. Use JPEG, PNG, or GIF (max 5MB each).'
-            return
-          }
-        }
-
-        this.success = true
-        setTimeout(() => this.$router.push('/dashboard'), 1200)
-      } catch (e) {
-        this.error = e.message || 'Something went wrong. Please try again.'
-      } finally {
-        this.submitting = false
-      }
     }
+
+    this.success = true
+    setTimeout(() => this.$router.push('/dashboard'), 1200)
+
+  } catch (e) {
+    alert('Something went wrong. Please try again.')
+  } finally {
+    this.submitting = false
+  }
+}
   }
 }
 </script>
@@ -465,9 +526,45 @@ export default {
   transition: border-color 0.2s, background 0.2s;
 }
 
+.file-upload--has-images {
+  padding: 16px;
+  text-align: left;
+}
+
 .file-upload:hover { border-color: #4f46e5; background: #f5f3ff; }
 
-.file-upload-prompt { display: flex; flex-direction: column; align-items: center; gap: 6px; color: #6b7280; }
+.file-upload-body {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.file-upload--has-images .file-upload-body {
+  flex-direction: row;
+  align-items: stretch;
+  gap: 16px;
+}
+
+.file-upload-prompt {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: #6b7280;
+}
+
+.file-upload-prompt--empty {
+  flex: 1;
+  padding: 8px 16px;
+}
+
+.file-upload-prompt--add-more {
+  flex: 0 0 148px;
+  padding: 12px 14px;
+  border-left: 2px dashed #e5e7eb;
+  text-align: center;
+}
 
 .upload-icon { font-size: 32px; }
 
@@ -475,8 +572,10 @@ export default {
 
 .image-preview-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
   gap: 10px;
+  flex: 1;
+  min-width: 0;
 }
 
 .image-preview {
@@ -543,5 +642,16 @@ export default {
 
 @media (max-width: 600px) {
   .form-row { grid-template-columns: 1fr; }
+
+  .file-upload--has-images .file-upload-body {
+    flex-direction: column;
+  }
+
+  .file-upload-prompt--add-more {
+    flex: none;
+    border-left: none;
+    border-top: 2px dashed #e5e7eb;
+    padding-top: 16px;
+  }
 }
 </style>
