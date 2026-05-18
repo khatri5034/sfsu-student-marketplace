@@ -3,7 +3,7 @@
     <section class="hero">
       <div class="container">
         <p class="eyebrow">SFSU STUDENT MARKETPLACE</p>
-        <h1>Move your campus buying<br />and selling forward.</h1>
+        <h1>Keep it on campus.<br />Buy, Sell and Trade with Gators.</h1>
         <p class="subtitle">
           Gator Freighter helps SFSU students buy, sell, and connect in one place.
           Find affordable items, post listings quickly, and trade within the campus community.

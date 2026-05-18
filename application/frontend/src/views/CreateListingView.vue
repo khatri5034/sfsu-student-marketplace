@@ -45,7 +45,7 @@
               </div>
 
               <div class="form-group">
-                <label>Price ($) <span v-if="form.listingType === 'trade'" class="optional-note">— not required for trade</span></label>
+                <label>Price ($) <span v-if="form.listingType !== 'trade'" class="asterisk">*</span><span v-if="form.listingType === 'trade'" class="optional-note">— not required for trade</span></label>
                 <input
                   v-model="form.price"
                   type="number"
@@ -74,7 +74,7 @@
               </div>
 
               <div class="form-group">
-                <label>Condition *</label>
+                <label>Condition  <span class="asterisk">*</span></label>
                 <select v-model="form.conditionId" required>
                   <option value="" disabled>Select a condition...</option>
                   <option
