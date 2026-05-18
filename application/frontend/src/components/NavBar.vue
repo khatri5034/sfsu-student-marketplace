@@ -1,6 +1,9 @@
 <template>
   <nav class="navbar">
-    <router-link to="/" class="logo">Gator Freighter</router-link>
+    <router-link to="/" class="logo">
+      <img :src="logoSrc" alt="Gator Freightor logo" class="logo-img" />
+      Gator Freighter
+    </router-link>
     <div class="nav-links">
       <router-link to="/" class="nav-link">Home</router-link>
       <router-link to="/search" class="nav-link">Browse</router-link>
@@ -22,10 +25,16 @@
 </template>
 
 <script>
+
+import gatorLogo from '../assets/GatorFreightor.png'
+
 export default {
   name: 'NavBar',
   data() {
-    return { loggedIn: !!localStorage.getItem('gf_user') }
+    return { 
+      loggedIn: !!localStorage.getItem('gf_user'), 
+      logoSrc: gatorLogo
+    }
   },
   watch: {
     $route() {
@@ -56,10 +65,18 @@ export default {
 }
 
 .logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   font-size: 22px;
   font-weight: 800;
   color: #312e81;
   text-decoration: none;
+}
+
+.logo-img {
+  height: 50px; 
+  width: auto;
 }
 
 .nav-links {
