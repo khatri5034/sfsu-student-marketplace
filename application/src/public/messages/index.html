@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Message Thread — Campus Marketplace</title>
+    <link rel="stylesheet" href="/css/marketplace.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="site-header-inner">
+        <div class="brand">
+          <span class="brand-name">Message Thread</span>
+          <span class="brand-sub">Barebones messaging page</span>
+        </div>
+      </div>
+    </header>
+
+    <main class="page">
+      <p class="meta">
+        <a href="/dashboard">Back to dashboard</a> &bull; <a href="/">Go to homepage</a>
+      </p>
+      <section class="chat-shell">
+        <header class="chat-header">
+          <h2 id="threadTitle">Thread</h2>
+          <p class="meta" id="threadMeta">Loading thread details...</p>
+        </header>
+
+        <section class="chat-messages" id="messageList"></section>
+
+        <form class="chat-compose" id="messageForm">
+          <input
+            id="messageInput"
+            type="text"
+            placeholder="Type a message..."
+            autocomplete="off"
+            maxlength="2000"
+          />
+          <button id="sendMessageButton" type="submit">Send</button>
+        </form>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <p>CSC 648 &bull; Team 14</p>
+    </footer>
+
+    <script src="/js/messages.js"></script>
+  </body>
+</html>

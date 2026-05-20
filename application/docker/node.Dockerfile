@@ -8,6 +8,12 @@ RUN mkdir -p public/uploads
 COPY package*.json ./
 RUN npm ci --omit=dev
 
+COPY frontend/package*.json ./frontend/
+RUN cd frontend && npm install
+
+COPY frontend ./frontend
+RUN cd frontend && npm run build
+
 COPY src/ ./src/
 COPY ecosystem.config.js ./
 

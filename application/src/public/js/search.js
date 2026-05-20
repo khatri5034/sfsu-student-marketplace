@@ -27,6 +27,7 @@ function renderItems(items) {
       const description = escapeHtml(item.description || 'No description');
       const listingType = escapeHtml(item.listing_type || 'N/A');
       const status = escapeHtml(item.status || 'active');
+      const imageUrl = item.image_url || '/uploads/vp-placeholder.jpg';
       return `
         <article class="card">
         <div class="cardContent">
@@ -39,7 +40,7 @@ function renderItems(items) {
           </div>
         </div>
 
-        <img class="cardImage" src="/uploads/vp-placeholder.jpg" alt="${title}">
+        <img class="cardImage" src="${imageUrl}" alt="${title}">
         </article>
       `;
     })

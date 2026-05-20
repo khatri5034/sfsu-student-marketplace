@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard — Campus Marketplace</title>
+    <link rel="stylesheet" href="/css/marketplace.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="site-header-inner">
+        <div class="brand">
+          <span class="brand-name">User Dashboard</span>
+          <span class="brand-sub">Messaging test view</span>
+        </div>
+      </div>
+    </header>
+
+    <main class="page">
+      <p class="meta">
+        Logged-in user: <strong id="currentUserLabel">Loading...</strong>
+      </p>
+      <p class="meta">
+        <a href="/">Go to homepage</a>
+      </p>
+      <p class="meta">
+        <button id="logoutButton" type="button">Log out</button>
+      </p>
+
+      <h2>Your conversations</h2>
+      <section class="items" id="conversationList"></section>
+    </main>
+
+    <footer class="site-footer">
+      <p>CSC 648 &bull; Team 14</p>
+    </footer>
+
+    <script src="/js/dashboard.js"></script>
+  </body>
+</html>
