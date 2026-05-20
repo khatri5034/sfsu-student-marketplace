@@ -40,6 +40,13 @@ INSERT INTO conditions (name) VALUES
   ('Well Used'),
   ('Broken');
 
+INSERT INTO pickup_locations (name, location, description, is_active) VALUES
+  ('J. Paul Leonard Library', 'Library main entrance', 'Meet near the main entrance.', TRUE),
+  ('Cesar Chavez Student Center', 'Student Center entrance', 'Meet near the main entrance or food court.', TRUE),
+  ('Student Services Building', 'Front steps', 'Meet near the front steps.', TRUE),
+  ('Mashouf Wellness Center', 'Main lobby', 'Meet inside the main lobby.', TRUE),
+  ('Thornton Hall', 'Main entrance', 'Meet near the main entrance.', TRUE);
+
 SET @cat_textbooks = (SELECT id FROM categories WHERE name = 'Textbooks' LIMIT 1);
 SET @cat_electronics = (SELECT id FROM categories WHERE name = 'Electronics' LIMIT 1);
 SET @cat_other = (SELECT id FROM categories WHERE name = 'Other' LIMIT 1);
