@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Log In — Campus Marketplace</title>
+    <link rel="stylesheet" href="/css/marketplace.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="site-header-inner">
+        <div class="brand">
+          <span class="brand-name">Log In</span>
+          <span class="brand-sub">Simple auth test page</span>
+        </div>
+      </div>
+    </header>
+
+    <main class="page">
+      <p class="meta">
+        <a href="/">Go to homepage</a> &bull; <a href="/register">Need an account? Register</a>
+      </p>
+
+      <form class="auth-form" id="loginForm">
+        <label for="email">Email</label>
+        <input id="email" type="email" required />
+
+        <label for="password">Password</label>
+        <input id="password" type="password" required />
+
+        <button type="submit">Log In</button>
+        <p id="authError" class="error"></p>
+      </form>
+    </main>
+
+    <footer class="site-footer">
+      <p>CSC 648 &bull; Team 14</p>
+    </footer>
+
+    <script src="/js/login.js"></script>
+  </body>
+</html>

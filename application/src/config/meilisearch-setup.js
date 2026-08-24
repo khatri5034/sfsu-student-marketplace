@@ -6,11 +6,13 @@ async function setupMeilisearchIndexes() {
     const index = meili.index('items');
 
     await index.updateSettings({
-      searchableAttributes: ['title', 'description', 'course_name', 'course_code'],
+      searchableAttributes: ['title', 'description', 'course_name', 'course_code','condition_name'],
       filterableAttributes: [
         'category_id',
         'course_id',
+        'condition_id',
         'status',
+        'approval_status',
         'listing_type',
         'seller_id',
         'pickup_location_id',
@@ -21,14 +23,18 @@ async function setupMeilisearchIndexes() {
         'title',
         'description',
         'price',
+        'image_url',
         'category_id',
         'course_id',
+        'condition_id',
         'course_name',
         'course_code',
+        'condition_name',
         'listing_type',
         'seller_id',
         'pickup_location_id',
         'status',
+        'approval_status',
         'is_featured',
         'created_at',
       ],
@@ -42,18 +48,30 @@ async function setupMeilisearchIndexes() {
           i.title,
           i.description,
           i.price,
+          (
+            SELECT li.image_url
+            FROM listing_images li
+            WHERE li.item_id = i.id
+            ORDER BY li.sort_order ASC, li.id ASC
+            LIMIT 1
+          ) AS image_url,
           i.category_id,
           i.course_id,
+          i.condition_id,
           c.course_code,
           c.course_name,
+          cond.name AS condition_name,
           i.listing_type,
           i.seller_id,
           i.pickup_location_id,
           i.status,
+          i.approval_status,
           i.is_featured,
           i.created_at
         FROM items i
         LEFT JOIN courses c ON i.course_id = c.id
+        LEFT JOIN conditions cond ON i.condition_id = cond.id
+
       `);
       await index.addDocuments(rows, { primaryKey: 'id' });
     } catch (err) {

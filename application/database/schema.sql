@@ -24,6 +24,10 @@ CREATE TABLE categories (
     id INT PRIMARY KEY AUTO_INCREMENT,
     name VARCHAR(100) NOT NULL UNIQUE
 );
+CREATE TABLE conditions (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(100) NOT NULL UNIQUE
+);
 
 INSERT INTO categories (name) VALUES
     ('Textbooks'),
@@ -47,6 +51,12 @@ CREATE TABLE courses (
     course_name VARCHAR(255) NOT NULL          
 );
 
+Insert INTO conditions (name) VALUES
+    ('Factory New'),
+    ('Like New'),
+    ('Lightly Used'),
+    ('Well Used'),
+    ('Broken');
 
 CREATE TABLE items (
     id INT PRIMARY KEY AUTO_INCREMENT,
@@ -55,10 +65,12 @@ CREATE TABLE items (
     description TEXT,
     price DECIMAL(10,2) NULL,
     category_id INT NULL,
+    condition_id INT NULL,
     course_id INT NULL,
     listing_type ENUM('sale', 'trade', 'sale_or_trade') NOT NULL DEFAULT 'sale',
     pickup_location_id INT NULL,
     status ENUM('active', 'sold', 'removed') NOT NULL DEFAULT 'active',
+    approval_status ENUM('pending', 'approved', 'rejected') NOT NULL DEFAULT 'pending',
     is_featured BOOLEAN NOT NULL DEFAULT FALSE,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -69,6 +81,10 @@ CREATE TABLE items (
 
     CONSTRAINT fk_items_category
         FOREIGN KEY (category_id) REFERENCES categories(id)
+        ON DELETE SET NULL,
+    
+    CONSTRAINT fk_items_condition
+        FOREIGN KEY (condition_id) REFERENCES conditions(id)
         ON DELETE SET NULL,
 
     CONSTRAINT fk_items_course
@@ -180,6 +196,7 @@ CREATE TABLE reports (
 
 -- Items: common listing queries
 CREATE INDEX idx_items_seller_id ON items(seller_id);
+CREATE INDEX idx_items_approval_status ON items(approval_status);
 CREATE INDEX idx_items_status_category_created ON items(status, category_id, created_at);
 CREATE INDEX idx_items_listing_type ON items(listing_type);
 CREATE INDEX idx_items_pickup_location_id ON items(pickup_location_id);
